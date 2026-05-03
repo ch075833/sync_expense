@@ -103,19 +103,15 @@ function init() {
   if (elements.periodMonth) elements.periodMonth.value = currentMonthKey();
   populateCategories();
   bindEvents();
+  setView(viewFromHash() || activeView, { syncHash: false });
   render();
   registerServiceWorker();
   updateConnectionStatus();
 }
 
 function bindEvents() {
-  document.querySelectorAll("[data-view]").forEach((button) => {
-    button.addEventListener("click", () => setView(button.dataset.view));
-  });
-
-  document.querySelectorAll("[data-view-jump]").forEach((button) => {
-    button.addEventListener("click", () => setView(button.dataset.viewJump));
-  });
+  document.addEventListener("click", handleViewClick);
+  window.addEventListener("hashchange", () => setView(viewFromHash() || "dashboard", { syncHash: false }));
 
   bind(elements.form, "submit", addTransaction);
   bind(elements.periodMonth, "change", render);
@@ -162,11 +158,21 @@ function populateCategories() {
   if (elements.todoCategoryInput) elements.todoCategoryInput.innerHTML = options;
 }
 
-function setView(view) {
+function handleViewClick(event) {
+  const trigger = event.target.closest("[data-view], [data-view-jump]");
+  if (!trigger) return;
+  const view = trigger.dataset.view || trigger.dataset.viewJump;
+  if (!view) return;
+  event.preventDefault();
+  setView(view, { syncHash: true });
+}
+
+function setView(view, options = {}) {
   const targetPanel = document.querySelector(`[data-view-panel="${view}"]`);
   if (!targetPanel) return;
 
   activeView = view;
+  document.body.dataset.activeView = view;
   document.querySelectorAll("[data-view]").forEach((button) => {
     const isActive = button.dataset.view === view;
     button.classList.toggle("active", isActive);
@@ -176,6 +182,14 @@ function setView(view) {
     panel.classList.toggle("active", panel.dataset.viewPanel === view);
     panel.toggleAttribute("aria-hidden", panel.dataset.viewPanel !== view);
   });
+
+  if (options.syncHash && window.location.hash !== `#${view}`) {
+    history.pushState(null, "", `#${view}`);
+  }
+}
+
+function viewFromHash() {
+  return window.location.hash.replace("#", "");
 }
 
 function addTransaction(event) {

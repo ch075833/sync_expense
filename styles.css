@@ -29,7 +29,8 @@ body {
 
 button,
 input,
-select {
+select,
+.nav-tab {
   font: inherit;
 }
 
@@ -94,10 +95,13 @@ noscript {
 .nav-tab {
   width: 100%;
   min-height: 44px;
+  display: flex;
+  align-items: center;
   padding: 0 0.9rem;
   border: 1px solid transparent;
   border-radius: 8px;
   color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
   text-align: left;
   background: transparent;
 }
@@ -786,6 +790,7 @@ button:focus-visible {
 
   .nav-tab {
     min-width: 0;
+    justify-content: center;
     padding: 0 0.6rem;
     text-align: center;
     white-space: nowrap;
@@ -832,6 +837,10 @@ button:focus-visible {
   .nav-tab {
     min-height: 42px;
     white-space: normal;
+  }
+
+  body:not([data-active-view="dashboard"]) .entry-panel {
+    display: none;
   }
 
   .main {
