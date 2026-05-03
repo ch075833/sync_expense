@@ -99,8 +99,8 @@ const elements = {
 init();
 
 function init() {
-  elements.dateInput.value = todayISO();
-  elements.periodMonth.value = currentMonthKey();
+  if (elements.dateInput) elements.dateInput.value = todayISO();
+  if (elements.periodMonth) elements.periodMonth.value = currentMonthKey();
   populateCategories();
   bindEvents();
   render();
@@ -109,39 +109,6 @@ function init() {
 }
 
 function bindEvents() {
-  elements.form.addEventListener("submit", addTransaction);
-  elements.periodMonth.addEventListener("change", () => {
-    render();
-  });
-  elements.searchInput.addEventListener("input", renderTransactions);
-  elements.typeFilter.addEventListener("change", renderTransactions);
-  elements.todoForm.addEventListener("submit", addTodo);
-  elements.todoEditForm.addEventListener("submit", saveTodoEdit);
-  elements.closeTodoDialog.addEventListener("click", closeTodoDialog);
-  elements.cancelTodoEdit.addEventListener("click", closeTodoDialog);
-  elements.deleteTodoFromDialog.addEventListener("click", deleteTodoFromDialog);
-  elements.exportButton.addEventListener("click", exportData);
-  elements.importInput.addEventListener("change", importData);
-  elements.resetDemoButton.addEventListener("click", loadSampleData);
-  elements.installButton.addEventListener("click", installApp);
-  elements.openAddCategoryDialog.addEventListener("click", openAddCategoryDialog);
-  elements.categoryEditForm.addEventListener("submit", saveCategoryEdit);
-  elements.editCategoryRecurring.addEventListener("change", syncDialogRecurringControls);
-  elements.editCategoryHasEnd.addEventListener("change", syncDialogRecurringControls);
-  elements.editCategoryHasAmountChange.addEventListener("change", syncDialogRecurringControls);
-  elements.closeCategoryDialog.addEventListener("click", closeCategoryDialog);
-  elements.cancelCategoryEdit.addEventListener("click", closeCategoryDialog);
-  elements.transactionEditForm.addEventListener("submit", saveTransactionEdit);
-  elements.closeTransactionDialog.addEventListener("click", closeTransactionDialog);
-  elements.cancelTransactionEdit.addEventListener("click", closeTransactionDialog);
-  window.addEventListener("online", updateConnectionStatus);
-  window.addEventListener("offline", updateConnectionStatus);
-  window.addEventListener("beforeinstallprompt", (event) => {
-    event.preventDefault();
-    deferredInstallPrompt = event;
-    elements.installButton.hidden = false;
-  });
-
   document.querySelectorAll("[data-view]").forEach((button) => {
     button.addEventListener("click", () => setView(button.dataset.view));
   });
@@ -150,14 +117,49 @@ function bindEvents() {
     button.addEventListener("click", () => setView(button.dataset.viewJump));
   });
 
+  bind(elements.form, "submit", addTransaction);
+  bind(elements.periodMonth, "change", render);
+  bind(elements.searchInput, "input", renderTransactions);
+  bind(elements.typeFilter, "change", renderTransactions);
+  bind(elements.todoForm, "submit", addTodo);
+  bind(elements.todoEditForm, "submit", saveTodoEdit);
+  bind(elements.closeTodoDialog, "click", closeTodoDialog);
+  bind(elements.cancelTodoEdit, "click", closeTodoDialog);
+  bind(elements.deleteTodoFromDialog, "click", deleteTodoFromDialog);
+  bind(elements.exportButton, "click", exportData);
+  bind(elements.importInput, "change", importData);
+  bind(elements.resetDemoButton, "click", loadSampleData);
+  bind(elements.installButton, "click", installApp);
+  bind(elements.openAddCategoryDialog, "click", openAddCategoryDialog);
+  bind(elements.categoryEditForm, "submit", saveCategoryEdit);
+  bind(elements.editCategoryRecurring, "change", syncDialogRecurringControls);
+  bind(elements.editCategoryHasEnd, "change", syncDialogRecurringControls);
+  bind(elements.editCategoryHasAmountChange, "change", syncDialogRecurringControls);
+  bind(elements.closeCategoryDialog, "click", closeCategoryDialog);
+  bind(elements.cancelCategoryEdit, "click", closeCategoryDialog);
+  bind(elements.transactionEditForm, "submit", saveTransactionEdit);
+  bind(elements.closeTransactionDialog, "click", closeTransactionDialog);
+  bind(elements.cancelTransactionEdit, "click", closeTransactionDialog);
+  window.addEventListener("online", updateConnectionStatus);
+  window.addEventListener("offline", updateConnectionStatus);
+  window.addEventListener("beforeinstallprompt", (event) => {
+    event.preventDefault();
+    deferredInstallPrompt = event;
+    if (elements.installButton) elements.installButton.hidden = false;
+  });
+}
+
+function bind(element, eventName, handler) {
+  if (element) element.addEventListener(eventName, handler);
 }
 
 function populateCategories() {
-  elements.categoryInput.innerHTML = state.categories
+  const options = state.categories
     .map((category) => `<option value="${escapeHTML(category.name)}">${escapeHTML(category.name)}</option>`)
     .join("");
-  elements.editTransactionCategory.innerHTML = elements.categoryInput.innerHTML;
-  elements.todoCategoryInput.innerHTML = elements.categoryInput.innerHTML;
+  if (elements.categoryInput) elements.categoryInput.innerHTML = options;
+  if (elements.editTransactionCategory) elements.editTransactionCategory.innerHTML = options;
+  if (elements.todoCategoryInput) elements.todoCategoryInput.innerHTML = options;
 }
 
 function setView(view) {
@@ -379,6 +381,7 @@ function renderRecent(monthly) {
 }
 
 function renderTodos() {
+  if (!elements.todoList) return;
   if (!state.todos.length) {
     elements.todoList.innerHTML = `
       <div class="empty-state">
@@ -824,8 +827,8 @@ function loadSampleData() {
 
 function updateConnectionStatus() {
   const online = navigator.onLine;
-  elements.statusDot.classList.toggle("offline", !online);
-  elements.statusText.textContent = online ? "Ready offline" : "Offline mode";
+  if (elements.statusDot) elements.statusDot.classList.toggle("offline", !online);
+  if (elements.statusText) elements.statusText.textContent = online ? "Ready offline" : "Offline mode";
 }
 
 async function installApp() {
@@ -833,7 +836,7 @@ async function installApp() {
   deferredInstallPrompt.prompt();
   await deferredInstallPrompt.userChoice;
   deferredInstallPrompt = null;
-  elements.installButton.hidden = true;
+  if (elements.installButton) elements.installButton.hidden = true;
 }
 
 function registerServiceWorker() {
