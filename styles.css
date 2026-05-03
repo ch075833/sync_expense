@@ -769,20 +769,32 @@ button:focus-visible {
     position: static;
     height: auto;
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
     gap: 1rem;
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .brand {
+    min-width: 0;
   }
 
   .nav-tabs {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   }
 
   .nav-tab {
+    min-width: 0;
+    padding: 0 0.6rem;
     text-align: center;
+    white-space: nowrap;
   }
 
   .storage-note {
     margin-top: 0;
+    justify-content: flex-end;
+    white-space: nowrap;
   }
 
   .entry-panel,
@@ -805,6 +817,23 @@ button:focus-visible {
 }
 
 @media (max-width: 620px) {
+  .sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .storage-note {
+    justify-content: flex-start;
+  }
+
+  .nav-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .nav-tab {
+    min-height: 42px;
+    white-space: normal;
+  }
+
   .main {
     padding: 1rem;
   }

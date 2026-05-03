@@ -1,6 +1,6 @@
 const STORAGE_KEY = "sync-expense-state-v9";
 const LEGACY_STORAGE_KEYS = ["sync-expense-state-v8", "sync-expense-state-v7", "sync-expense-state-v6", "sync-expense-state-v5", "sync-expense-state-v4", "sync-expense-state-v3", "sync-expense-state-v2", "sync-expense-state-v1"];
-const currency = new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" });
+const currency = new Intl.NumberFormat(undefined, { style: "currency", currency: "USD", currencyDisplay: "narrowSymbol" });
 const dateFormatter = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" });
 
 const defaultCategories = [
