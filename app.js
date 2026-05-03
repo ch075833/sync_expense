@@ -403,11 +403,12 @@ function renderOverall(monthly) {
 
 function openWalletDialog() {
   elements.walletInput.value = Number(state.wallet || 0);
-  elements.walletDialog.showModal();
+  openModal(elements.walletDialog);
+  elements.walletInput.focus();
 }
 
 function closeWalletDialog() {
-  elements.walletDialog.close();
+  closeModal(elements.walletDialog);
 }
 
 function saveWallet(event) {
@@ -418,6 +419,28 @@ function saveWallet(event) {
   saveState();
   render();
   closeWalletDialog();
+}
+
+function openModal(dialog) {
+  if (!dialog) return;
+  if (typeof dialog.showModal === "function") {
+    try {
+      dialog.showModal();
+      return;
+    } catch (error) {
+      console.warn("Dialog showModal failed, using open fallback", error);
+    }
+  }
+  dialog.setAttribute("open", "");
+}
+
+function closeModal(dialog) {
+  if (!dialog) return;
+  if (typeof dialog.close === "function") {
+    dialog.close();
+    return;
+  }
+  dialog.removeAttribute("open");
 }
 
 function renderTransactions() {
