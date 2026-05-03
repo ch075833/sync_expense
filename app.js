@@ -413,7 +413,7 @@ function renderTodos() {
         <article class="todo-row ${todo.checked ? "checked" : ""}">
           <label class="todo-check" title="Mark as paid">
             <input type="checkbox" data-toggle-todo="${todo.id}" ${todo.checked ? "checked" : ""}>
-            <span>${todo.checked ? "Paid" : "Open"}</span>
+            <span>${todo.checked ? "Paid" : "Pending"}</span>
           </label>
           <div class="category-icon" style="background:${category.color}">${category.icon}</div>
           <div class="row-title">

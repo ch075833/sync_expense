@@ -259,6 +259,10 @@ h2 {
   margin-bottom: 1rem;
 }
 
+body:not([data-active-view="dashboard"]) .entry-panel {
+  display: none;
+}
+
 .entry-form {
   display: grid;
   grid-template-columns: repeat(4, minmax(120px, 1fr)) minmax(180px, 1.4fr) auto;
@@ -837,10 +841,6 @@ button:focus-visible {
   .nav-tab {
     min-height: 42px;
     white-space: normal;
-  }
-
-  body:not([data-active-view="dashboard"]) .entry-panel {
-    display: none;
   }
 
   .main {
