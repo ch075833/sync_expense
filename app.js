@@ -143,11 +143,11 @@ function bindEvents() {
   });
 
   document.querySelectorAll("[data-view]").forEach((button) => {
-    button.addEventListener("click", () => setView(button.dataset.view, { scroll: true }));
+    button.addEventListener("click", () => setView(button.dataset.view));
   });
 
   document.querySelectorAll("[data-view-jump]").forEach((button) => {
-    button.addEventListener("click", () => setView(button.dataset.viewJump, { scroll: true }));
+    button.addEventListener("click", () => setView(button.dataset.viewJump));
   });
 
 }
@@ -160,7 +160,7 @@ function populateCategories() {
   elements.todoCategoryInput.innerHTML = elements.categoryInput.innerHTML;
 }
 
-function setView(view, options = {}) {
+function setView(view) {
   const targetPanel = document.querySelector(`[data-view-panel="${view}"]`);
   if (!targetPanel) return;
 
@@ -174,12 +174,6 @@ function setView(view, options = {}) {
     panel.classList.toggle("active", panel.dataset.viewPanel === view);
     panel.toggleAttribute("aria-hidden", panel.dataset.viewPanel !== view);
   });
-
-  if (options.scroll) {
-    requestAnimationFrame(() => {
-      targetPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  }
 }
 
 function addTransaction(event) {
@@ -844,7 +838,17 @@ async function installApp() {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js").catch((error) => console.warn("Service worker registration failed", error));
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+
+    navigator.serviceWorker
+      .register("sw.js")
+      .then((registration) => registration.update())
+      .catch((error) => console.warn("Service worker registration failed", error));
   }
 }
 
