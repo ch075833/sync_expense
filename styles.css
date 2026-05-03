@@ -44,6 +44,10 @@ noscript {
   background: #fff4e6;
 }
 
+.compat-hidden {
+  display: none;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);

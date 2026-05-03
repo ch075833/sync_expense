@@ -365,9 +365,9 @@ function render() {
   const wallet = Number(state.wallet || 0);
   const expenses = sum(monthly.filter((item) => item.type === "expense"));
 
-  elements.periodLabel.textContent = monthLabel(monthKey);
-  elements.expenseTotal.textContent = currency.format(expenses);
-  elements.balanceTotal.textContent = currency.format(wallet - expenses);
+  setText(elements.periodLabel, monthLabel(monthKey));
+  setText(elements.expenseTotal, currency.format(expenses));
+  setText(elements.balanceTotal, currency.format(wallet - expenses));
 
   renderChart(monthly);
   renderTransactions();
@@ -389,6 +389,10 @@ function renderOverall(monthly) {
   elements.overallSpentTotal.textContent = currency.format(spentTotal);
   elements.overallBudgetRemaining.textContent = currency.format(wallet - budgetTotal);
   elements.overallSpendRemaining.textContent = currency.format(wallet - spentTotal);
+}
+
+function setText(element, value) {
+  if (element) element.textContent = value;
 }
 
 function openWalletDialog() {

@@ -235,6 +235,20 @@
       </div>
     </template>
 
+    <div class="compat-hidden" aria-hidden="true">
+      <select id="typeInput">
+        <option value="expense">Expense</option>
+      </select>
+      <select id="editTransactionType">
+        <option value="expense">Expense</option>
+      </select>
+      <button id="resetDemoButton" type="button" tabindex="-1">Sample data</button>
+      <span id="incomeTotal">$0.00</span>
+      <span id="dailyAverage">$0.00</span>
+      <span id="statusDot"></span>
+      <span id="statusText"></span>
+    </div>
+
     <dialog class="modal" id="categoryDialog">
       <form class="modal-panel" id="categoryEditForm">
         <div class="modal-heading">
