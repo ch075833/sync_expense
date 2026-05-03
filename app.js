@@ -364,14 +364,14 @@ function render() {
   const monthKey = selectedMonthKey();
   const allTransactions = getTransactionsWithRecurring();
   const monthly = allTransactions.filter((transaction) => monthFromDate(transaction.date) === monthKey);
-  const income = sum(monthly.filter((item) => item.type === "income"));
+  const wallet = Number(state.wallet || 0);
   const expenses = sum(monthly.filter((item) => item.type === "expense"));
   const daysElapsed = monthKey === currentMonthKey() ? new Date().getDate() : daysInMonth(monthKey);
 
   elements.periodLabel.textContent = monthLabel(monthKey);
-  elements.incomeTotal.textContent = currency.format(income);
+  elements.incomeTotal.textContent = currency.format(wallet);
   elements.expenseTotal.textContent = currency.format(expenses);
-  elements.balanceTotal.textContent = currency.format(income - expenses);
+  elements.balanceTotal.textContent = currency.format(wallet - expenses);
   elements.dailyAverage.textContent = currency.format(expenses / Math.max(daysElapsed, 1));
 
   renderChart(monthly);
