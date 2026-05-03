@@ -81,8 +81,7 @@ noscript {
   font-size: 1.05rem;
 }
 
-.brand span,
-.storage-note {
+.brand span {
   color: rgba(255, 255, 255, 0.72);
   font-size: 0.88rem;
 }
@@ -114,24 +113,6 @@ noscript {
 
 .nav-tab.active {
   border-color: rgba(255, 255, 255, 0.16);
-}
-
-.storage-note {
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.status-dot {
-  width: 0.65rem;
-  height: 0.65rem;
-  border-radius: 999px;
-  background: #22c55e;
-}
-
-.status-dot.offline {
-  background: #f59e0b;
 }
 
 .main {
@@ -810,12 +791,6 @@ button:focus-visible {
     white-space: nowrap;
   }
 
-  .storage-note {
-    margin-top: 0;
-    justify-content: flex-end;
-    white-space: nowrap;
-  }
-
   .entry-panel,
   .dashboard-grid {
     grid-template-columns: 1fr;
@@ -839,10 +814,6 @@ button:focus-visible {
 @media (max-width: 620px) {
   .sidebar {
     grid-template-columns: 1fr;
-  }
-
-  .storage-note {
-    justify-content: flex-start;
   }
 
   .nav-tabs {

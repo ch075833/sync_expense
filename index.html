@@ -31,10 +31,6 @@
           <a class="nav-tab" href="#categories" data-view="categories">Categories</a>
           <a class="nav-tab" href="#transfer" data-view="transfer">Download/Upload</a>
         </nav>
-        <div class="storage-note">
-          <span class="status-dot" id="statusDot"></span>
-          <span id="statusText">Ready offline</span>
-        </div>
       </aside>
 
       <main class="main">
@@ -323,10 +319,12 @@
           <h2>Set wallet</h2>
           <button class="icon-button" id="closeWalletDialog" type="button" title="Close" aria-label="Close">x</button>
         </div>
-        <label>
-          <span>Wallet value</span>
-          <input id="walletInput" type="number" min="0" step="0.01" inputmode="decimal" required>
-        </label>
+        <div class="modal-grid">
+          <label class="wide">
+            <span>Wallet value</span>
+            <input id="walletInput" type="number" min="0" step="0.01" inputmode="decimal" required>
+          </label>
+        </div>
         <div class="modal-actions">
           <button class="secondary" id="cancelWalletEdit" type="button">Cancel</button>
           <button class="primary" type="submit">Save wallet</button>

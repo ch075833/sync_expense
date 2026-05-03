@@ -70,8 +70,6 @@ const elements = {
   exportButton: document.querySelector("#exportButton"),
   importInput: document.querySelector("#importInput"),
   installButton: document.querySelector("#installButton"),
-  statusDot: document.querySelector("#statusDot"),
-  statusText: document.querySelector("#statusText"),
   openAddCategoryDialog: document.querySelector("#openAddCategoryDialog"),
   categoryList: document.querySelector("#categoryList"),
   categoryDialog: document.querySelector("#categoryDialog"),
@@ -114,7 +112,6 @@ function init() {
   setView(viewFromHash() || activeView, { syncHash: false });
   render();
   registerServiceWorker();
-  updateConnectionStatus();
 }
 
 function bindEvents() {
@@ -147,8 +144,6 @@ function bindEvents() {
   bind(elements.transactionEditForm, "submit", saveTransactionEdit);
   bind(elements.closeTransactionDialog, "click", closeTransactionDialog);
   bind(elements.cancelTransactionEdit, "click", closeTransactionDialog);
-  window.addEventListener("online", updateConnectionStatus);
-  window.addEventListener("offline", updateConnectionStatus);
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     deferredInstallPrompt = event;
@@ -902,12 +897,6 @@ function loadSampleData() {
   saveState();
   populateCategories();
   render();
-}
-
-function updateConnectionStatus() {
-  const online = navigator.onLine;
-  if (elements.statusDot) elements.statusDot.classList.toggle("offline", !online);
-  if (elements.statusText) elements.statusText.textContent = online ? "Ready offline" : "Offline mode";
 }
 
 async function installApp() {
