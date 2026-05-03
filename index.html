@@ -25,6 +25,7 @@
         <nav class="nav-tabs" aria-label="Views">
           <button class="nav-tab active" data-view="dashboard" type="button" aria-current="page">Dashboard</button>
           <button class="nav-tab" data-view="transactions" type="button">Transactions</button>
+          <button class="nav-tab" data-view="todos" type="button">Todo</button>
           <button class="nav-tab" data-view="budgets" type="button">Budgets</button>
           <button class="nav-tab" data-view="categories" type="button">Categories</button>
           <button class="nav-tab" data-view="transfer" type="button">Download/Upload</button>
@@ -140,6 +141,30 @@
               </div>
             </div>
             <div class="transaction-list" id="transactionList"></div>
+          </div>
+        </section>
+
+        <section class="view" id="todosView" data-view-panel="todos">
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>Todo list</h2>
+            </div>
+            <form class="todo-form" id="todoForm">
+              <label class="wide">
+                <span>Item</span>
+                <input id="todoTitleInput" type="text" maxlength="80" placeholder="Thing to buy" required>
+              </label>
+              <label>
+                <span>Price tag</span>
+                <input id="todoPriceInput" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" required>
+              </label>
+              <label>
+                <span>Category</span>
+                <select id="todoCategoryInput" required></select>
+              </label>
+              <button class="primary" type="submit">Add</button>
+            </form>
+            <div class="todo-list" id="todoList"></div>
           </div>
         </section>
 
@@ -265,6 +290,33 @@
         <div class="modal-actions">
           <button class="secondary" id="cancelCategoryEdit" type="button">Cancel</button>
           <button class="primary" type="submit">Save changes</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="todoDialog">
+      <form class="modal-panel" id="todoEditForm">
+        <div class="modal-heading">
+          <h2>Edit todo</h2>
+          <button class="icon-button" id="closeTodoDialog" type="button" title="Close" aria-label="Close">x</button>
+        </div>
+        <input id="editTodoId" type="hidden">
+        <div class="modal-grid">
+          <label>
+            <span>Name</span>
+            <input id="editTodoTitle" type="text" maxlength="80" required>
+          </label>
+          <label>
+            <span>Amount</span>
+            <input id="editTodoPrice" type="number" min="0.01" step="0.01" inputmode="decimal" required>
+          </label>
+        </div>
+        <div class="modal-actions split-actions">
+          <button class="delete-button text-delete" id="deleteTodoFromDialog" type="button">Delete todo</button>
+          <div>
+            <button class="secondary" id="cancelTodoEdit" type="button">Cancel</button>
+            <button class="primary" type="submit">Save changes</button>
+          </div>
         </div>
       </form>
     </dialog>

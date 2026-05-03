@@ -1,5 +1,5 @@
-const STORAGE_KEY = "sync-expense-state-v8";
-const LEGACY_STORAGE_KEYS = ["sync-expense-state-v7", "sync-expense-state-v6", "sync-expense-state-v5", "sync-expense-state-v4", "sync-expense-state-v3", "sync-expense-state-v2", "sync-expense-state-v1"];
+const STORAGE_KEY = "sync-expense-state-v9";
+const LEGACY_STORAGE_KEYS = ["sync-expense-state-v8", "sync-expense-state-v7", "sync-expense-state-v6", "sync-expense-state-v5", "sync-expense-state-v4", "sync-expense-state-v3", "sync-expense-state-v2", "sync-expense-state-v1"];
 const currency = new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" });
 const dateFormatter = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" });
 
@@ -36,6 +36,19 @@ const elements = {
   typeFilter: document.querySelector("#typeFilter"),
   transactionList: document.querySelector("#transactionList"),
   recentList: document.querySelector("#recentList"),
+  todoForm: document.querySelector("#todoForm"),
+  todoTitleInput: document.querySelector("#todoTitleInput"),
+  todoPriceInput: document.querySelector("#todoPriceInput"),
+  todoCategoryInput: document.querySelector("#todoCategoryInput"),
+  todoList: document.querySelector("#todoList"),
+  todoDialog: document.querySelector("#todoDialog"),
+  todoEditForm: document.querySelector("#todoEditForm"),
+  closeTodoDialog: document.querySelector("#closeTodoDialog"),
+  cancelTodoEdit: document.querySelector("#cancelTodoEdit"),
+  deleteTodoFromDialog: document.querySelector("#deleteTodoFromDialog"),
+  editTodoId: document.querySelector("#editTodoId"),
+  editTodoTitle: document.querySelector("#editTodoTitle"),
+  editTodoPrice: document.querySelector("#editTodoPrice"),
   budgetList: document.querySelector("#budgetList"),
   incomeTotal: document.querySelector("#incomeTotal"),
   expenseTotal: document.querySelector("#expenseTotal"),
@@ -102,6 +115,11 @@ function bindEvents() {
   });
   elements.searchInput.addEventListener("input", renderTransactions);
   elements.typeFilter.addEventListener("change", renderTransactions);
+  elements.todoForm.addEventListener("submit", addTodo);
+  elements.todoEditForm.addEventListener("submit", saveTodoEdit);
+  elements.closeTodoDialog.addEventListener("click", closeTodoDialog);
+  elements.cancelTodoEdit.addEventListener("click", closeTodoDialog);
+  elements.deleteTodoFromDialog.addEventListener("click", deleteTodoFromDialog);
   elements.exportButton.addEventListener("click", exportData);
   elements.importInput.addEventListener("change", importData);
   elements.resetDemoButton.addEventListener("click", loadSampleData);
@@ -139,6 +157,7 @@ function populateCategories() {
     .map((category) => `<option value="${escapeHTML(category.name)}">${escapeHTML(category.name)}</option>`)
     .join("");
   elements.editTransactionCategory.innerHTML = elements.categoryInput.innerHTML;
+  elements.todoCategoryInput.innerHTML = elements.categoryInput.innerHTML;
 }
 
 function setView(view) {
@@ -177,8 +196,102 @@ function addTransaction(event) {
 function deleteTransaction(id) {
   if (!confirm("Delete this transaction?")) return;
   state.transactions = state.transactions.filter((transaction) => transaction.id !== id);
+  state.todos = state.todos.map((todo) => (
+    todo.transactionId === id ? { ...todo, checked: false, transactionId: "" } : todo
+  ));
   saveState();
   render();
+}
+
+function addTodo(event) {
+  event.preventDefault();
+  const todo = {
+    id: makeId(),
+    title: elements.todoTitleInput.value.trim(),
+    price: Number(elements.todoPriceInput.value),
+    category: elements.todoCategoryInput.value,
+    checked: false,
+    transactionId: "",
+    createdAt: new Date().toISOString()
+  };
+
+  if (!todo.title || !todo.price || todo.price <= 0) return;
+
+  state.todos.unshift(todo);
+  saveState();
+  elements.todoForm.reset();
+  elements.todoCategoryInput.value = state.categories[0]?.name || "Food";
+  render();
+}
+
+function toggleTodo(id, checked) {
+  const todo = state.todos.find((item) => item.id === id);
+  if (!todo) return;
+
+  todo.checked = checked;
+  if (checked) {
+    const linkedTransaction = todo.transactionId
+      ? state.transactions.find((transaction) => transaction.id === todo.transactionId)
+      : null;
+    if (!linkedTransaction) {
+      const transaction = makeTodoTransaction(todo);
+      todo.transactionId = transaction.id;
+      state.transactions.unshift(transaction);
+    }
+  } else if (todo.transactionId) {
+    state.transactions = state.transactions.filter((transaction) => transaction.id !== todo.transactionId);
+    todo.transactionId = "";
+  }
+
+  saveState();
+  render();
+}
+
+function openTodoDialog(id) {
+  const todo = state.todos.find((item) => item.id === id);
+  if (!todo) return;
+
+  elements.editTodoId.value = todo.id;
+  elements.editTodoTitle.value = todo.title;
+  elements.editTodoPrice.value = todo.price;
+  elements.todoDialog.showModal();
+}
+
+function closeTodoDialog() {
+  elements.todoDialog.close();
+}
+
+function saveTodoEdit(event) {
+  event.preventDefault();
+  const todo = state.todos.find((item) => item.id === elements.editTodoId.value);
+  if (!todo) return;
+  const title = elements.editTodoTitle.value.trim();
+  const price = Number(elements.editTodoPrice.value);
+  if (!title || !price || price <= 0) return;
+
+  todo.title = title;
+  todo.price = price;
+  syncTodoTransaction(todo);
+  saveState();
+  render();
+  closeTodoDialog();
+}
+
+function deleteTodoFromDialog() {
+  deleteTodo(elements.editTodoId.value);
+}
+
+function deleteTodo(id) {
+  const todo = state.todos.find((item) => item.id === id);
+  if (!todo) return;
+  if (!confirm("Delete this todo item?")) return;
+  if (todo.transactionId) {
+    state.transactions = state.transactions.filter((transaction) => transaction.id !== todo.transactionId);
+  }
+  state.todos = state.todos.filter((item) => item.id !== id);
+  saveState();
+  render();
+  if (elements.todoDialog.open) closeTodoDialog();
 }
 
 function deleteRecurringOccurrence(key) {
@@ -240,6 +353,7 @@ function render() {
   renderChart(monthly);
   renderTransactions();
   renderRecent(monthly);
+  renderTodos();
   renderBudgets(monthly);
   renderCategories();
 }
@@ -258,6 +372,46 @@ function renderTransactions() {
 
 function renderRecent(monthly) {
   renderList(elements.recentList, monthly.slice().sort(sortByDateDesc).slice(0, 8), { actions: false });
+}
+
+function renderTodos() {
+  if (!state.todos.length) {
+    elements.todoList.innerHTML = `
+      <div class="empty-state">
+        <strong>No todo items yet</strong>
+        <span>Add something you plan to buy, then check it when paid.</span>
+      </div>
+    `;
+    return;
+  }
+
+  elements.todoList.innerHTML = state.todos
+    .map((todo) => {
+      const category = getCategory(todo.category);
+      return `
+        <article class="todo-row ${todo.checked ? "checked" : ""}">
+          <label class="todo-check" title="Mark as paid">
+            <input type="checkbox" data-toggle-todo="${todo.id}" ${todo.checked ? "checked" : ""}>
+            <span>${todo.checked ? "Paid" : "Open"}</span>
+          </label>
+          <div class="category-icon" style="background:${category.color}">${category.icon}</div>
+          <div class="row-title">
+            <strong>${escapeHTML(todo.title)}</strong>
+            <span>${escapeHTML(todo.category)}</span>
+          </div>
+          <strong class="price-tag">${currency.format(todo.price)}</strong>
+          <button class="secondary" type="button" data-edit-todo="${todo.id}">Edit</button>
+        </article>
+      `;
+    })
+    .join("");
+
+  elements.todoList.querySelectorAll("[data-toggle-todo]").forEach((checkbox) => {
+    checkbox.addEventListener("change", () => toggleTodo(checkbox.dataset.toggleTodo, checkbox.checked));
+  });
+  elements.todoList.querySelectorAll("[data-edit-todo]").forEach((button) => {
+    button.addEventListener("click", () => openTodoDialog(button.dataset.editTodo));
+  });
 }
 
 function renderList(container, items, options = { actions: true }) {
@@ -463,6 +617,9 @@ function saveCategoryEdit(event) {
   state.transactions = state.transactions.map((transaction) => (
     transaction.category === previousName ? { ...transaction, category: nextName } : transaction
   ));
+  state.todos = state.todos.map((todo) => (
+    todo.category === previousName ? { ...todo, category: nextName } : todo
+  ));
 
   saveState();
   populateCategories();
@@ -512,6 +669,9 @@ function deleteCategory(id) {
   state.categories = state.categories.filter((category) => category.id !== id || category.protected);
   state.transactions = state.transactions.map((transaction) => (
     transaction.category === name ? { ...transaction, category: "Food" } : transaction
+  ));
+  state.todos = state.todos.map((todo) => (
+    todo.category === name ? { ...todo, category: "Food" } : todo
   ));
   delete state.budgets[name];
   saveState();
@@ -649,6 +809,7 @@ function importData(event) {
 function loadSampleData() {
   state = normalizeState({
     transactions: sampleTransactions.map((item) => ({ ...item, id: makeId() })),
+    todos: [],
     budgets: { ...defaultBudgets },
     categories: defaultCategories
   });
@@ -700,6 +861,31 @@ function getCategory(name) {
 
 function getTransactionsWithRecurring() {
   return [...state.transactions, ...getRecurringTransactions()];
+}
+
+function makeTodoTransaction(todo) {
+  return {
+    id: makeId(),
+    type: "expense",
+    amount: todo.price,
+    category: todo.category,
+    date: todayISO(),
+    note: todo.title,
+    todoId: todo.id
+  };
+}
+
+function syncTodoTransaction(todo) {
+  if (!todo.transactionId) return;
+  const transaction = state.transactions.find((item) => item.id === todo.transactionId);
+  if (!transaction) {
+    todo.checked = false;
+    todo.transactionId = "";
+    return;
+  }
+  transaction.amount = todo.price;
+  transaction.note = todo.title;
+  transaction.category = todo.category;
 }
 
 function getRecurringTransactions() {
@@ -875,9 +1061,27 @@ function normalizeState(incoming) {
       category: categoryNames.has(transaction.category) ? transaction.category : "Food"
     }))
     : [];
+  const transactionIds = new Set(transactions.map((transaction) => transaction.id));
+  const todos = Array.isArray(incoming.todos)
+    ? incoming.todos
+      .filter((todo) => todo.title && Number(todo.price) > 0)
+      .map((todo) => {
+        const transactionId = transactionIds.has(todo.transactionId) ? todo.transactionId : "";
+        return {
+          id: todo.id || makeId(),
+          title: String(todo.title).trim().slice(0, 80),
+          price: Number(todo.price),
+          category: categoryNames.has(todo.category) ? todo.category : "Food",
+          checked: Boolean(todo.checked && transactionId),
+          transactionId,
+          createdAt: todo.createdAt || new Date().toISOString()
+        };
+      })
+    : [];
 
   return {
     transactions,
+    todos,
     budgets,
     categories,
     recurringSkips: Array.isArray(incoming.recurringSkips) ? incoming.recurringSkips : []

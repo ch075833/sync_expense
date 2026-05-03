@@ -1,6 +1,6 @@
 # Sync Expense
 
-A local-first PWA expense tracker for income, expenses, category charts, monthly budgets, custom categories, import/export, and offline use.
+A local-first PWA expense tracker for income, expenses, todo purchases with price tags, category charts, monthly budgets, custom categories, import/export, and offline use.
 
 ## Run
 
