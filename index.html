@@ -24,6 +24,7 @@
         </div>
         <nav class="nav-tabs" aria-label="Views">
           <a class="nav-tab active" href="#dashboard" data-view="dashboard" aria-current="page">Dashboard</a>
+          <a class="nav-tab" href="#overall" data-view="overall">Overall</a>
           <a class="nav-tab" href="#transactions" data-view="transactions">Transactions</a>
           <a class="nav-tab" href="#todos" data-view="todos">Todo</a>
           <a class="nav-tab" href="#budgets" data-view="budgets">Budgets</a>
@@ -59,13 +60,6 @@
             <h2 id="entryTitle">Record a transaction</h2>
           </div>
           <form class="entry-form" id="transactionForm">
-            <label>
-              <span>Type</span>
-              <select id="typeInput" required>
-                <option value="expense">Expense</option>
-                <option value="income">Income</option>
-              </select>
-            </label>
             <label>
               <span>Amount</span>
               <input id="amountInput" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" required>
@@ -127,6 +121,37 @@
           </div>
         </section>
 
+        <section class="view" id="overallView" data-view-panel="overall">
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>Overall</h2>
+              <button class="primary" id="openWalletDialog" type="button">Set wallet</button>
+            </div>
+            <div class="overall-grid">
+              <article class="metric wallet-card">
+                <span>Wallet</span>
+                <strong id="walletTotal">$0.00</strong>
+              </article>
+              <article class="metric">
+                <span>Total budget projected</span>
+                <strong id="overallBudgetTotal">$0.00</strong>
+              </article>
+              <article class="metric">
+                <span>Total transaction spent</span>
+                <strong id="overallSpentTotal">$0.00</strong>
+              </article>
+              <article class="metric">
+                <span>Remaining budget can be set</span>
+                <strong id="overallBudgetRemaining">$0.00</strong>
+              </article>
+              <article class="metric">
+                <span>Remaining money can be spent</span>
+                <strong id="overallSpendRemaining">$0.00</strong>
+              </article>
+            </div>
+          </div>
+        </section>
+
         <section class="view" id="transactionsView" data-view-panel="transactions">
           <div class="panel">
             <div class="panel-heading">
@@ -136,7 +161,6 @@
                 <select id="typeFilter" aria-label="Filter type">
                   <option value="all">All</option>
                   <option value="expense">Expenses</option>
-                  <option value="income">Income</option>
                 </select>
               </div>
             </div>
@@ -172,7 +196,6 @@
           <div class="panel">
             <div class="panel-heading">
               <h2>Monthly budgets</h2>
-              <button class="secondary" id="resetDemoButton" type="button">Sample data</button>
             </div>
             <div class="budget-list" id="budgetList"></div>
           </div>
@@ -294,6 +317,23 @@
       </form>
     </dialog>
 
+    <dialog class="modal" id="walletDialog">
+      <form class="modal-panel" id="walletForm">
+        <div class="modal-heading">
+          <h2>Set wallet</h2>
+          <button class="icon-button" id="closeWalletDialog" type="button" title="Close" aria-label="Close">x</button>
+        </div>
+        <label>
+          <span>Wallet value</span>
+          <input id="walletInput" type="number" min="0" step="0.01" inputmode="decimal" required>
+        </label>
+        <div class="modal-actions">
+          <button class="secondary" id="cancelWalletEdit" type="button">Cancel</button>
+          <button class="primary" type="submit">Save wallet</button>
+        </div>
+      </form>
+    </dialog>
+
     <dialog class="modal" id="todoDialog">
       <form class="modal-panel" id="todoEditForm">
         <div class="modal-heading">
@@ -329,13 +369,6 @@
         </div>
         <input id="editTransactionId" type="hidden">
         <div class="modal-grid">
-          <label>
-            <span>Type</span>
-            <select id="editTransactionType" required>
-              <option value="expense">Expense</option>
-              <option value="income">Income</option>
-            </select>
-          </label>
           <label>
             <span>Amount</span>
             <input id="editTransactionAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required>

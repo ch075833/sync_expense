@@ -1,5 +1,5 @@
-const STORAGE_KEY = "sync-expense-state-v9";
-const LEGACY_STORAGE_KEYS = ["sync-expense-state-v8", "sync-expense-state-v7", "sync-expense-state-v6", "sync-expense-state-v5", "sync-expense-state-v4", "sync-expense-state-v3", "sync-expense-state-v2", "sync-expense-state-v1"];
+const STORAGE_KEY = "sync-expense-state-v10";
+const LEGACY_STORAGE_KEYS = ["sync-expense-state-v9", "sync-expense-state-v8", "sync-expense-state-v7", "sync-expense-state-v6", "sync-expense-state-v5", "sync-expense-state-v4", "sync-expense-state-v3", "sync-expense-state-v2", "sync-expense-state-v1"];
 const currency = new Intl.NumberFormat(undefined, { style: "currency", currency: "USD", currencyDisplay: "narrowSymbol" });
 const dateFormatter = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" });
 
@@ -26,7 +26,6 @@ let deferredInstallPrompt = null;
 
 const elements = {
   form: document.querySelector("#transactionForm"),
-  typeInput: document.querySelector("#typeInput"),
   amountInput: document.querySelector("#amountInput"),
   categoryInput: document.querySelector("#categoryInput"),
   dateInput: document.querySelector("#dateInput"),
@@ -50,6 +49,17 @@ const elements = {
   editTodoTitle: document.querySelector("#editTodoTitle"),
   editTodoPrice: document.querySelector("#editTodoPrice"),
   budgetList: document.querySelector("#budgetList"),
+  openWalletDialog: document.querySelector("#openWalletDialog"),
+  walletDialog: document.querySelector("#walletDialog"),
+  walletForm: document.querySelector("#walletForm"),
+  closeWalletDialog: document.querySelector("#closeWalletDialog"),
+  cancelWalletEdit: document.querySelector("#cancelWalletEdit"),
+  walletInput: document.querySelector("#walletInput"),
+  walletTotal: document.querySelector("#walletTotal"),
+  overallBudgetTotal: document.querySelector("#overallBudgetTotal"),
+  overallSpentTotal: document.querySelector("#overallSpentTotal"),
+  overallBudgetRemaining: document.querySelector("#overallBudgetRemaining"),
+  overallSpendRemaining: document.querySelector("#overallSpendRemaining"),
   incomeTotal: document.querySelector("#incomeTotal"),
   expenseTotal: document.querySelector("#expenseTotal"),
   balanceTotal: document.querySelector("#balanceTotal"),
@@ -59,7 +69,6 @@ const elements = {
   chartLegend: document.querySelector("#chartLegend"),
   exportButton: document.querySelector("#exportButton"),
   importInput: document.querySelector("#importInput"),
-  resetDemoButton: document.querySelector("#resetDemoButton"),
   installButton: document.querySelector("#installButton"),
   statusDot: document.querySelector("#statusDot"),
   statusText: document.querySelector("#statusText"),
@@ -89,7 +98,6 @@ const elements = {
   closeTransactionDialog: document.querySelector("#closeTransactionDialog"),
   cancelTransactionEdit: document.querySelector("#cancelTransactionEdit"),
   editTransactionId: document.querySelector("#editTransactionId"),
-  editTransactionType: document.querySelector("#editTransactionType"),
   editTransactionAmount: document.querySelector("#editTransactionAmount"),
   editTransactionCategory: document.querySelector("#editTransactionCategory"),
   editTransactionDate: document.querySelector("#editTransactionDate"),
@@ -122,9 +130,12 @@ function bindEvents() {
   bind(elements.closeTodoDialog, "click", closeTodoDialog);
   bind(elements.cancelTodoEdit, "click", closeTodoDialog);
   bind(elements.deleteTodoFromDialog, "click", deleteTodoFromDialog);
+  bind(elements.openWalletDialog, "click", openWalletDialog);
+  bind(elements.walletForm, "submit", saveWallet);
+  bind(elements.closeWalletDialog, "click", closeWalletDialog);
+  bind(elements.cancelWalletEdit, "click", closeWalletDialog);
   bind(elements.exportButton, "click", exportData);
   bind(elements.importInput, "change", importData);
-  bind(elements.resetDemoButton, "click", loadSampleData);
   bind(elements.installButton, "click", installApp);
   bind(elements.openAddCategoryDialog, "click", openAddCategoryDialog);
   bind(elements.categoryEditForm, "submit", saveCategoryEdit);
@@ -196,7 +207,7 @@ function addTransaction(event) {
   event.preventDefault();
   const transaction = {
     id: makeId(),
-    type: elements.typeInput.value,
+    type: "expense",
     amount: Number(elements.amountInput.value),
     category: elements.categoryInput.value,
     date: elements.dateInput.value,
@@ -209,7 +220,6 @@ function addTransaction(event) {
   saveState();
   elements.form.reset();
   elements.dateInput.value = todayISO();
-  elements.typeInput.value = "expense";
   render();
 }
 
@@ -326,7 +336,6 @@ function openTransactionDialog(id) {
   if (!transaction) return;
 
   elements.editTransactionId.value = transaction.id;
-  elements.editTransactionType.value = transaction.type;
   elements.editTransactionAmount.value = transaction.amount;
   elements.editTransactionCategory.value = transaction.category;
   elements.editTransactionDate.value = transaction.date;
@@ -345,7 +354,7 @@ function saveTransactionEdit(event) {
   const amount = Number(elements.editTransactionAmount.value);
   if (!amount || amount <= 0) return;
 
-  transaction.type = elements.editTransactionType.value;
+  transaction.type = "expense";
   transaction.amount = amount;
   transaction.category = elements.editTransactionCategory.value;
   transaction.date = elements.editTransactionDate.value;
@@ -374,8 +383,41 @@ function render() {
   renderTransactions();
   renderRecent(monthly);
   renderTodos();
+  renderOverall(monthly);
   renderBudgets(monthly);
   renderCategories();
+}
+
+function renderOverall(monthly) {
+  if (!elements.walletTotal) return;
+  const wallet = Number(state.wallet || 0);
+  const budgetTotal = totalBudget();
+  const spentTotal = sum(monthly.filter((item) => item.type === "expense"));
+
+  elements.walletTotal.textContent = currency.format(wallet);
+  elements.overallBudgetTotal.textContent = currency.format(budgetTotal);
+  elements.overallSpentTotal.textContent = currency.format(spentTotal);
+  elements.overallBudgetRemaining.textContent = currency.format(wallet - budgetTotal);
+  elements.overallSpendRemaining.textContent = currency.format(wallet - spentTotal);
+}
+
+function openWalletDialog() {
+  elements.walletInput.value = Number(state.wallet || 0);
+  elements.walletDialog.showModal();
+}
+
+function closeWalletDialog() {
+  elements.walletDialog.close();
+}
+
+function saveWallet(event) {
+  event.preventDefault();
+  const wallet = Number(elements.walletInput.value);
+  if (Number.isNaN(wallet) || wallet < 0) return;
+  state.wallet = wallet;
+  saveState();
+  render();
+  closeWalletDialog();
 }
 
 function renderTransactions() {
@@ -878,6 +920,10 @@ function groupExpenses(transactions) {
     }, {});
 }
 
+function totalBudget() {
+  return Object.values(state.budgets || {}).reduce((acc, value) => acc + Number(value || 0), 0);
+}
+
 function sum(items) {
   return items.reduce((acc, transaction) => acc + transaction.amount, 0);
 }
@@ -1115,6 +1161,7 @@ function normalizeState(incoming) {
     todos,
     budgets,
     categories,
+    wallet: Number(incoming.wallet || 0),
     recurringSkips: Array.isArray(incoming.recurringSkips) ? incoming.recurringSkips : []
   };
 }
