@@ -1,4 +1,4 @@
-const CACHE_NAME = "sync-expense-v23";
+const CACHE_NAME = "sync-expense-v24";
 const ASSETS = [
   ".",
   "index.html",

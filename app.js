@@ -143,11 +143,11 @@ function bindEvents() {
   });
 
   document.querySelectorAll("[data-view]").forEach((button) => {
-    button.addEventListener("click", () => setView(button.dataset.view));
+    button.addEventListener("click", () => setView(button.dataset.view, { scroll: true }));
   });
 
   document.querySelectorAll("[data-view-jump]").forEach((button) => {
-    button.addEventListener("click", () => setView(button.dataset.viewJump));
+    button.addEventListener("click", () => setView(button.dataset.viewJump, { scroll: true }));
   });
 
 }
@@ -160,7 +160,10 @@ function populateCategories() {
   elements.todoCategoryInput.innerHTML = elements.categoryInput.innerHTML;
 }
 
-function setView(view) {
+function setView(view, options = {}) {
+  const targetPanel = document.querySelector(`[data-view-panel="${view}"]`);
+  if (!targetPanel) return;
+
   activeView = view;
   document.querySelectorAll("[data-view]").forEach((button) => {
     const isActive = button.dataset.view === view;
@@ -169,7 +172,14 @@ function setView(view) {
   });
   document.querySelectorAll("[data-view-panel]").forEach((panel) => {
     panel.classList.toggle("active", panel.dataset.viewPanel === view);
+    panel.toggleAttribute("aria-hidden", panel.dataset.viewPanel !== view);
   });
+
+  if (options.scroll) {
+    requestAnimationFrame(() => {
+      targetPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
 }
 
 function addTransaction(event) {
