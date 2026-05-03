@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#19324d">
+    <meta name="description" content="A local-first PWA expense tracker.">
+    <title>Sync Expense</title>
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icons/icon-192.svg">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <noscript>This expense tracker needs JavaScript enabled.</noscript>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="App navigation">
+        <div class="brand">
+          <img src="icons/icon.svg" alt="" width="40" height="40">
+          <div>
+            <strong>Sync Expense</strong>
+            <span>Local-first PWA</span>
+          </div>
+        </div>
+        <nav class="nav-tabs" aria-label="Views">
+          <button class="nav-tab active" data-view="dashboard" type="button" aria-current="page">Dashboard</button>
+          <button class="nav-tab" data-view="transactions" type="button">Transactions</button>
+          <button class="nav-tab" data-view="budgets" type="button">Budgets</button>
+          <button class="nav-tab" data-view="categories" type="button">Categories</button>
+          <button class="nav-tab" data-view="transfer" type="button">Download/Upload</button>
+        </nav>
+        <div class="storage-note">
+          <span class="status-dot" id="statusDot"></span>
+          <span id="statusText">Ready offline</span>
+        </div>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="periodLabel">This month</p>
+            <h1>Expense Tracker</h1>
+          </div>
+          <div class="actions">
+            <label class="period-control">
+              <span>Month</span>
+              <input id="periodMonth" type="month">
+            </label>
+            <button class="icon-button" id="installButton" type="button" hidden title="Install app" aria-label="Install app">
+              <span aria-hidden="true">+</span>
+            </button>
+          </div>
+        </header>
+
+        <section class="entry-panel" aria-labelledby="entryTitle">
+          <div>
+            <p class="eyebrow">Quick add</p>
+            <h2 id="entryTitle">Record a transaction</h2>
+          </div>
+          <form class="entry-form" id="transactionForm">
+            <label>
+              <span>Type</span>
+              <select id="typeInput" required>
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+              </select>
+            </label>
+            <label>
+              <span>Amount</span>
+              <input id="amountInput" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" required>
+            </label>
+            <label>
+              <span>Category</span>
+              <select id="categoryInput" required></select>
+            </label>
+            <label>
+              <span>Date</span>
+              <input id="dateInput" type="date" required>
+            </label>
+            <label class="wide">
+              <span>Note</span>
+              <input id="noteInput" type="text" maxlength="80" placeholder="Lunch, salary, bill...">
+            </label>
+            <button class="primary" type="submit">Add</button>
+          </form>
+        </section>
+
+        <section class="view active" id="dashboardView" data-view-panel="dashboard">
+          <div class="metrics" aria-label="Monthly summary">
+            <article class="metric">
+              <span>Income</span>
+              <strong id="incomeTotal">$0.00</strong>
+            </article>
+            <article class="metric">
+              <span>Expenses</span>
+              <strong id="expenseTotal">$0.00</strong>
+            </article>
+            <article class="metric">
+              <span>Balance</span>
+              <strong id="balanceTotal">$0.00</strong>
+            </article>
+            <article class="metric">
+              <span>Daily average</span>
+              <strong id="dailyAverage">$0.00</strong>
+            </article>
+          </div>
+
+          <div class="dashboard-grid">
+            <section class="panel chart-panel" aria-labelledby="categoryTitle">
+              <div class="panel-heading">
+                <h2 id="categoryTitle">Spending by category</h2>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="categoryChart" width="360" height="240" aria-label="Category spending chart"></canvas>
+              </div>
+              <div class="legend" id="chartLegend"></div>
+            </section>
+
+            <section class="panel" aria-labelledby="recentTitle">
+              <div class="panel-heading">
+                <h2 id="recentTitle">Recent activity</h2>
+                <button class="text-button" data-view-jump="transactions" type="button">View all</button>
+              </div>
+              <div class="transaction-list compact" id="recentList"></div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="transactionsView" data-view-panel="transactions">
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>Transactions</h2>
+              <div class="filter-row">
+                <input id="searchInput" type="search" placeholder="Search notes or categories" aria-label="Search transactions">
+                <select id="typeFilter" aria-label="Filter type">
+                  <option value="all">All</option>
+                  <option value="expense">Expenses</option>
+                  <option value="income">Income</option>
+                </select>
+              </div>
+            </div>
+            <div class="transaction-list" id="transactionList"></div>
+          </div>
+        </section>
+
+        <section class="view" id="budgetsView" data-view-panel="budgets">
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>Monthly budgets</h2>
+              <button class="secondary" id="resetDemoButton" type="button">Sample data</button>
+            </div>
+            <div class="budget-list" id="budgetList"></div>
+          </div>
+        </section>
+
+        <section class="view" id="categoriesView" data-view-panel="categories">
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>Categories</h2>
+              <button class="primary" id="openAddCategoryDialog" type="button">Add category</button>
+            </div>
+            <div class="category-list" id="categoryList"></div>
+          </div>
+        </section>
+
+        <section class="view" id="transferView" data-view-panel="transfer">
+          <div class="panel">
+            <div class="panel-heading">
+              <h2>Download/Upload</h2>
+            </div>
+            <div class="transfer-grid">
+              <article class="transfer-item">
+                <div>
+                  <strong>Download backup</strong>
+                  <span>Export your current records as a JSON file.</span>
+                </div>
+                <button class="primary" id="exportButton" type="button">Export</button>
+              </article>
+              <article class="transfer-item">
+                <div>
+                  <strong>Upload backup</strong>
+                  <span>Import a previously exported Sync Expense JSON file.</span>
+                </div>
+                <label class="secondary file-control">
+                  Import
+                  <input id="importInput" type="file" accept="application/json">
+                </label>
+              </article>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="emptyStateTemplate">
+      <div class="empty-state">
+        <strong>No records yet</strong>
+        <span>Add your first transaction to start tracking cash flow.</span>
+      </div>
+    </template>
+
+    <dialog class="modal" id="categoryDialog">
+      <form class="modal-panel" id="categoryEditForm">
+        <div class="modal-heading">
+          <h2 id="categoryDialogTitle">Edit category</h2>
+          <button class="icon-button" id="closeCategoryDialog" type="button" title="Close" aria-label="Close">x</button>
+        </div>
+        <input id="categoryDialogMode" type="hidden" value="edit">
+        <input id="editCategoryId" type="hidden">
+        <div class="modal-grid">
+          <label>
+            <span>Name</span>
+            <input id="editCategoryName" type="text" maxlength="32" required>
+          </label>
+          <label>
+            <span>Monthly budget</span>
+            <input id="editCategoryBudget" type="number" min="0" step="10" required>
+          </label>
+          <label>
+            <span>Color</span>
+            <input id="editCategoryColor" type="color" required>
+          </label>
+          <label class="checkbox-control">
+            <input id="editCategoryRecurring" type="checkbox">
+            <span>Recurring payment</span>
+          </label>
+          <label>
+            <span>Recurring amount</span>
+            <input id="editCategoryRecurringAmount" type="number" min="0.01" step="0.01" inputmode="decimal">
+          </label>
+          <label>
+            <span>Starts on</span>
+            <input id="editCategoryRecurringStart" type="date" required>
+          </label>
+          <label class="checkbox-control">
+            <input id="editCategoryHasEnd" type="checkbox">
+            <span>End date</span>
+          </label>
+          <label>
+            <span>Ends on</span>
+            <input id="editCategoryRecurringEnd" type="date">
+          </label>
+          <label>
+            <span>Repeats</span>
+            <select id="editCategoryRecurringPattern">
+              <option value="monthly">Monthly</option>
+              <option value="weekly">Weekly</option>
+              <option value="daily">Daily</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </label>
+          <label class="checkbox-control">
+            <input id="editCategoryHasAmountChange" type="checkbox">
+            <span>Amount changes</span>
+          </label>
+          <label>
+            <span>New amount</span>
+            <input id="editCategoryNextAmount" type="number" min="0.01" step="0.01" inputmode="decimal">
+          </label>
+          <label>
+            <span>Change starts</span>
+            <input id="editCategoryAmountChangeDate" type="date">
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary" id="cancelCategoryEdit" type="button">Cancel</button>
+          <button class="primary" type="submit">Save changes</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="transactionDialog">
+      <form class="modal-panel" id="transactionEditForm">
+        <div class="modal-heading">
+          <h2>Edit transaction</h2>
+          <button class="icon-button" id="closeTransactionDialog" type="button" title="Close" aria-label="Close">x</button>
+        </div>
+        <input id="editTransactionId" type="hidden">
+        <div class="modal-grid">
+          <label>
+            <span>Type</span>
+            <select id="editTransactionType" required>
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+            </select>
+          </label>
+          <label>
+            <span>Amount</span>
+            <input id="editTransactionAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required>
+          </label>
+          <label>
+            <span>Category</span>
+            <select id="editTransactionCategory" required></select>
+          </label>
+          <label>
+            <span>Date</span>
+            <input id="editTransactionDate" type="date" required>
+          </label>
+          <label class="wide">
+            <span>Note</span>
+            <input id="editTransactionNote" type="text" maxlength="80">
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary" id="cancelTransactionEdit" type="button">Cancel</button>
+          <button class="primary" type="submit">Save changes</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>
