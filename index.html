@@ -29,6 +29,7 @@
           <a class="nav-tab" href="#todos" data-view="todos">Todo</a>
           <a class="nav-tab" href="#budgets" data-view="budgets">Budgets Stats</a>
           <a class="nav-tab" href="#categories" data-view="categories">Add category</a>
+          <a class="nav-tab" href="#recurring" data-view="recurring">Recurring</a>
           <a class="nav-tab" href="#transfer" data-view="transfer">Download/Upload</a>
         </nav>
       </aside>
@@ -194,7 +195,10 @@
             </div>
             <div class="category-list" id="categoryList"></div>
           </div>
-          <div class="panel section-panel">
+        </section>
+
+        <section class="view" id="recurringView" data-view-panel="recurring">
+          <div class="panel">
             <div class="panel-heading">
               <h2>Recurring expenses</h2>
               <button class="primary" id="openAddRecurringDialog" type="button">Add recurring</button>

@@ -641,6 +641,7 @@ function renderBudgets(monthly) {
 }
 
 function renderCategories() {
+  if (!elements.categoryList) return;
   elements.categoryList.innerHTML = state.categories
     .map((category) => renderCategoryRow(category))
     .join("");
@@ -723,7 +724,8 @@ function openAddCategoryDialog() {
   elements.editCategoryDescription.value = "";
   elements.editCategoryBudget.value = 0;
   elements.editCategoryColor.value = getRandomCategoryColor();
-  elements.categoryDialog.showModal();
+  openModal(elements.categoryDialog);
+  elements.editCategoryName.focus();
 }
 
 function openCategoryDialog(id) {
@@ -737,11 +739,12 @@ function openCategoryDialog(id) {
   elements.editCategoryDescription.value = category.description || "";
   elements.editCategoryBudget.value = state.budgets[category.name] || 0;
   elements.editCategoryColor.value = category.color;
-  elements.categoryDialog.showModal();
+  openModal(elements.categoryDialog);
+  elements.editCategoryName.focus();
 }
 
 function closeCategoryDialog() {
-  elements.categoryDialog.close();
+  closeModal(elements.categoryDialog);
 }
 
 function saveCategoryEdit(event) {
@@ -873,7 +876,8 @@ function openAddRecurringDialog() {
   elements.editRecurringAmountChangeDate.value = "";
   elements.deleteRecurringFromDialog.hidden = true;
   syncRecurringDialogControls();
-  elements.recurringDialog.showModal();
+  openModal(elements.recurringDialog);
+  elements.editRecurringName.focus();
 }
 
 function openRecurringDialog(id) {
@@ -895,11 +899,12 @@ function openRecurringDialog(id) {
   elements.editRecurringAmountChangeDate.value = expense.recurringAmountChangeDate || "";
   elements.deleteRecurringFromDialog.hidden = false;
   syncRecurringDialogControls();
-  elements.recurringDialog.showModal();
+  openModal(elements.recurringDialog);
+  elements.editRecurringName.focus();
 }
 
 function closeRecurringDialog() {
-  elements.recurringDialog.close();
+  closeModal(elements.recurringDialog);
 }
 
 function saveRecurringEdit(event) {
