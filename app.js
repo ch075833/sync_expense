@@ -126,14 +126,14 @@ function init() {
   if (elements.periodMonth) elements.periodMonth.value = currentMonthKey();
   populateCategories();
   bindEvents();
-  setView(viewFromHash() || activeView, { syncHash: false });
+  setView(getInitialView(), { syncHash: false });
   render();
   registerServiceWorker();
 }
 
 function bindEvents() {
   document.addEventListener("click", handleViewClick);
-  window.addEventListener("hashchange", () => setView(viewFromHash() || "dashboard", { syncHash: false }));
+  window.addEventListener("hashchange", () => setView(getInitialView(), { syncHash: false }));
 
   bind(elements.form, "submit", addTransaction);
   bind(elements.periodMonth, "change", render);
@@ -200,7 +200,7 @@ function handleViewClick(event) {
 
 function setView(view, options = {}) {
   const targetPanel = document.querySelector(`[data-view-panel="${view}"]`);
-  if (!targetPanel) return;
+  if (!targetPanel) return false;
 
   activeView = view;
   document.body.dataset.activeView = view;
@@ -217,10 +217,17 @@ function setView(view, options = {}) {
   if (options.syncHash && window.location.hash !== `#${view}`) {
     history.pushState(null, "", `#${view}`);
   }
+
+  return true;
 }
 
 function viewFromHash() {
   return window.location.hash.replace("#", "");
+}
+
+function getInitialView() {
+  const view = viewFromHash() || activeView;
+  return document.querySelector(`[data-view-panel="${view}"]`) ? view : "dashboard";
 }
 
 function addTransaction(event) {
