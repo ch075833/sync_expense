@@ -44,9 +44,6 @@
               <span>Month</span>
               <input id="periodMonth" type="month">
             </label>
-            <button class="icon-button" id="installButton" type="button" hidden title="Install app" aria-label="Install app">
-              <span aria-hidden="true">+</span>
-            </button>
           </div>
         </header>
 
@@ -167,8 +164,8 @@
                 <input id="todoTitleInput" type="text" maxlength="80" placeholder="Thing to buy" required>
               </label>
               <label>
-                <span>Price tag</span>
-                <input id="todoPriceInput" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" required>
+                <span>Estimate</span>
+                <input id="todoPriceInput" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Optional">
               </label>
               <label>
                 <span>Category</span>
@@ -197,6 +194,13 @@
             </div>
             <div class="category-list" id="categoryList"></div>
           </div>
+          <div class="panel section-panel">
+            <div class="panel-heading">
+              <h2>Recurring expenses</h2>
+              <button class="primary" id="openAddRecurringDialog" type="button">Add recurring</button>
+            </div>
+            <div class="category-list" id="recurringList"></div>
+          </div>
         </section>
 
         <section class="view" id="transferView" data-view-panel="transfer">
@@ -221,6 +225,13 @@
                   Import
                   <input id="importInput" type="file" accept="application/json">
                 </label>
+              </article>
+              <article class="transfer-item" id="installItem" hidden>
+                <div>
+                  <strong>Install app</strong>
+                  <span>Add Sync Expense to this device for faster access.</span>
+                </div>
+                <button class="primary" id="installButton" type="button">Install</button>
               </article>
             </div>
           </div>
@@ -263,36 +274,61 @@
             <input id="editCategoryName" type="text" maxlength="32" required>
           </label>
           <label>
-            <span>Monthly budget</span>
+            <span>Description</span>
+            <input id="editCategoryDescription" type="text" maxlength="48" placeholder="Satay, chicken rice...">
+          </label>
+          <label>
+            <span>Shared monthly budget</span>
             <input id="editCategoryBudget" type="number" min="0" step="0.01" inputmode="decimal" required>
           </label>
           <label>
             <span>Color</span>
             <input id="editCategoryColor" type="color" required>
           </label>
-          <label class="checkbox-control">
-            <input id="editCategoryRecurring" type="checkbox">
-            <span>Recurring payment</span>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary" id="cancelCategoryEdit" type="button">Cancel</button>
+          <button class="primary" type="submit">Save changes</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="recurringDialog">
+      <form class="modal-panel" id="recurringEditForm">
+        <div class="modal-heading">
+          <h2 id="recurringDialogTitle">Edit recurring expense</h2>
+          <button class="icon-button" id="closeRecurringDialog" type="button" title="Close" aria-label="Close">x</button>
+        </div>
+        <input id="recurringDialogMode" type="hidden" value="edit">
+        <input id="editRecurringId" type="hidden">
+        <div class="modal-grid">
+          <label class="wide">
+            <span>Name</span>
+            <input id="editRecurringName" type="text" maxlength="80" placeholder="School fee, piano lesson..." required>
           </label>
           <label>
-            <span>Recurring amount</span>
-            <input id="editCategoryRecurringAmount" type="number" min="0.01" step="0.01" inputmode="decimal">
+            <span>Category</span>
+            <select id="editRecurringCategory" required></select>
+          </label>
+          <label>
+            <span>Amount</span>
+            <input id="editRecurringAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required>
           </label>
           <label>
             <span>Starts on</span>
-            <input id="editCategoryRecurringStart" type="date" required>
+            <input id="editRecurringStart" type="date" required>
           </label>
           <label class="checkbox-control">
-            <input id="editCategoryHasEnd" type="checkbox">
+            <input id="editRecurringHasEnd" type="checkbox">
             <span>End date</span>
           </label>
           <label>
             <span>Ends on</span>
-            <input id="editCategoryRecurringEnd" type="date">
+            <input id="editRecurringEnd" type="date">
           </label>
           <label>
             <span>Repeats</span>
-            <select id="editCategoryRecurringPattern">
+            <select id="editRecurringPattern">
               <option value="monthly">Monthly</option>
               <option value="weekly">Weekly</option>
               <option value="daily">Daily</option>
@@ -300,21 +336,24 @@
             </select>
           </label>
           <label class="checkbox-control">
-            <input id="editCategoryHasAmountChange" type="checkbox">
+            <input id="editRecurringHasAmountChange" type="checkbox">
             <span>Amount changes</span>
           </label>
           <label>
             <span>New amount</span>
-            <input id="editCategoryNextAmount" type="number" min="0.01" step="0.01" inputmode="decimal">
+            <input id="editRecurringNextAmount" type="number" min="0.01" step="0.01" inputmode="decimal">
           </label>
           <label>
             <span>Change starts</span>
-            <input id="editCategoryAmountChangeDate" type="date">
+            <input id="editRecurringAmountChangeDate" type="date">
           </label>
         </div>
-        <div class="modal-actions">
-          <button class="secondary" id="cancelCategoryEdit" type="button">Cancel</button>
-          <button class="primary" type="submit">Save changes</button>
+        <div class="modal-actions split-actions">
+          <button class="delete-button text-delete" id="deleteRecurringFromDialog" type="button">Delete</button>
+          <div>
+            <button class="secondary" id="cancelRecurringEdit" type="button">Cancel</button>
+            <button class="primary" type="submit">Save changes</button>
+          </div>
         </div>
       </form>
     </dialog>
@@ -351,8 +390,8 @@
             <input id="editTodoTitle" type="text" maxlength="80" required>
           </label>
           <label>
-            <span>Amount</span>
-            <input id="editTodoPrice" type="number" min="0.01" step="0.01" inputmode="decimal" required>
+            <span>Estimate</span>
+            <input id="editTodoPrice" type="number" min="0" step="0.01" inputmode="decimal" placeholder="Optional">
           </label>
         </div>
         <div class="modal-actions split-actions">
@@ -361,6 +400,26 @@
             <button class="secondary" id="cancelTodoEdit" type="button">Cancel</button>
             <button class="primary" type="submit">Save changes</button>
           </div>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog class="modal" id="todoPaymentDialog">
+      <form class="modal-panel" id="todoPaymentForm">
+        <div class="modal-heading">
+          <h2>Amount paid</h2>
+          <button class="icon-button" id="closeTodoPaymentDialog" type="button" title="Close" aria-label="Close">x</button>
+        </div>
+        <input id="payTodoId" type="hidden">
+        <div class="modal-grid">
+          <label class="wide">
+            <span>Paid amount</span>
+            <input id="payTodoAmount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" required>
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button class="secondary" id="cancelTodoPayment" type="button">Cancel</button>
+          <button class="primary" type="submit">Mark paid</button>
         </div>
       </form>
     </dialog>

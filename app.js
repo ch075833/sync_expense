@@ -4,7 +4,7 @@ const currency = new Intl.NumberFormat(undefined, { style: "currency", currency:
 const dateFormatter = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" });
 
 const defaultCategories = [
-  { id: "food", name: "Food", color: "#c2410c", icon: "Fo", protected: true, recurring: false, recurringAmount: 0, recurringStart: todayISO(), recurringEnd: "", recurringPattern: "monthly", recurringAmountChangeDate: "", recurringNextAmount: 0 }
+  { id: "food", name: "Food", description: "", color: "#c2410c", icon: "Fo", protected: true }
 ];
 
 const categoryColors = ["#0f766e", "#2563eb", "#7c3aed", "#be123c", "#b7791f", "#0369a1", "#15803d", "#475569", "#c2410c", "#4338ca"];
@@ -48,6 +48,12 @@ const elements = {
   editTodoId: document.querySelector("#editTodoId"),
   editTodoTitle: document.querySelector("#editTodoTitle"),
   editTodoPrice: document.querySelector("#editTodoPrice"),
+  todoPaymentDialog: document.querySelector("#todoPaymentDialog"),
+  todoPaymentForm: document.querySelector("#todoPaymentForm"),
+  closeTodoPaymentDialog: document.querySelector("#closeTodoPaymentDialog"),
+  cancelTodoPayment: document.querySelector("#cancelTodoPayment"),
+  payTodoId: document.querySelector("#payTodoId"),
+  payTodoAmount: document.querySelector("#payTodoAmount"),
   budgetList: document.querySelector("#budgetList"),
   openWalletDialog: document.querySelector("#openWalletDialog"),
   walletDialog: document.querySelector("#walletDialog"),
@@ -68,8 +74,10 @@ const elements = {
   exportButton: document.querySelector("#exportButton"),
   importInput: document.querySelector("#importInput"),
   installButton: document.querySelector("#installButton"),
+  installItem: document.querySelector("#installItem"),
   openAddCategoryDialog: document.querySelector("#openAddCategoryDialog"),
   categoryList: document.querySelector("#categoryList"),
+  recurringList: document.querySelector("#recurringList"),
   categoryDialog: document.querySelector("#categoryDialog"),
   categoryEditForm: document.querySelector("#categoryEditForm"),
   categoryDialogTitle: document.querySelector("#categoryDialogTitle"),
@@ -78,17 +86,28 @@ const elements = {
   cancelCategoryEdit: document.querySelector("#cancelCategoryEdit"),
   editCategoryId: document.querySelector("#editCategoryId"),
   editCategoryName: document.querySelector("#editCategoryName"),
+  editCategoryDescription: document.querySelector("#editCategoryDescription"),
   editCategoryBudget: document.querySelector("#editCategoryBudget"),
   editCategoryColor: document.querySelector("#editCategoryColor"),
-  editCategoryRecurring: document.querySelector("#editCategoryRecurring"),
-  editCategoryRecurringAmount: document.querySelector("#editCategoryRecurringAmount"),
-  editCategoryRecurringStart: document.querySelector("#editCategoryRecurringStart"),
-  editCategoryHasEnd: document.querySelector("#editCategoryHasEnd"),
-  editCategoryRecurringEnd: document.querySelector("#editCategoryRecurringEnd"),
-  editCategoryRecurringPattern: document.querySelector("#editCategoryRecurringPattern"),
-  editCategoryHasAmountChange: document.querySelector("#editCategoryHasAmountChange"),
-  editCategoryNextAmount: document.querySelector("#editCategoryNextAmount"),
-  editCategoryAmountChangeDate: document.querySelector("#editCategoryAmountChangeDate"),
+  openAddRecurringDialog: document.querySelector("#openAddRecurringDialog"),
+  recurringDialog: document.querySelector("#recurringDialog"),
+  recurringEditForm: document.querySelector("#recurringEditForm"),
+  recurringDialogTitle: document.querySelector("#recurringDialogTitle"),
+  recurringDialogMode: document.querySelector("#recurringDialogMode"),
+  closeRecurringDialog: document.querySelector("#closeRecurringDialog"),
+  cancelRecurringEdit: document.querySelector("#cancelRecurringEdit"),
+  deleteRecurringFromDialog: document.querySelector("#deleteRecurringFromDialog"),
+  editRecurringId: document.querySelector("#editRecurringId"),
+  editRecurringName: document.querySelector("#editRecurringName"),
+  editRecurringCategory: document.querySelector("#editRecurringCategory"),
+  editRecurringAmount: document.querySelector("#editRecurringAmount"),
+  editRecurringStart: document.querySelector("#editRecurringStart"),
+  editRecurringHasEnd: document.querySelector("#editRecurringHasEnd"),
+  editRecurringEnd: document.querySelector("#editRecurringEnd"),
+  editRecurringPattern: document.querySelector("#editRecurringPattern"),
+  editRecurringHasAmountChange: document.querySelector("#editRecurringHasAmountChange"),
+  editRecurringNextAmount: document.querySelector("#editRecurringNextAmount"),
+  editRecurringAmountChangeDate: document.querySelector("#editRecurringAmountChangeDate"),
   transactionDialog: document.querySelector("#transactionDialog"),
   transactionEditForm: document.querySelector("#transactionEditForm"),
   closeTransactionDialog: document.querySelector("#closeTransactionDialog"),
@@ -125,6 +144,9 @@ function bindEvents() {
   bind(elements.closeTodoDialog, "click", closeTodoDialog);
   bind(elements.cancelTodoEdit, "click", closeTodoDialog);
   bind(elements.deleteTodoFromDialog, "click", deleteTodoFromDialog);
+  bind(elements.todoPaymentForm, "submit", saveTodoPayment);
+  bind(elements.closeTodoPaymentDialog, "click", closeTodoPaymentDialog);
+  bind(elements.cancelTodoPayment, "click", closeTodoPaymentDialog);
   bind(elements.openWalletDialog, "click", openWalletDialog);
   bind(elements.walletForm, "submit", saveWallet);
   bind(elements.closeWalletDialog, "click", closeWalletDialog);
@@ -134,18 +156,22 @@ function bindEvents() {
   bind(elements.installButton, "click", installApp);
   bind(elements.openAddCategoryDialog, "click", openAddCategoryDialog);
   bind(elements.categoryEditForm, "submit", saveCategoryEdit);
-  bind(elements.editCategoryRecurring, "change", syncDialogRecurringControls);
-  bind(elements.editCategoryHasEnd, "change", syncDialogRecurringControls);
-  bind(elements.editCategoryHasAmountChange, "change", syncDialogRecurringControls);
   bind(elements.closeCategoryDialog, "click", closeCategoryDialog);
   bind(elements.cancelCategoryEdit, "click", closeCategoryDialog);
+  bind(elements.openAddRecurringDialog, "click", openAddRecurringDialog);
+  bind(elements.recurringEditForm, "submit", saveRecurringEdit);
+  bind(elements.editRecurringHasEnd, "change", syncRecurringDialogControls);
+  bind(elements.editRecurringHasAmountChange, "change", syncRecurringDialogControls);
+  bind(elements.closeRecurringDialog, "click", closeRecurringDialog);
+  bind(elements.cancelRecurringEdit, "click", closeRecurringDialog);
+  bind(elements.deleteRecurringFromDialog, "click", deleteRecurringFromDialog);
   bind(elements.transactionEditForm, "submit", saveTransactionEdit);
   bind(elements.closeTransactionDialog, "click", closeTransactionDialog);
   bind(elements.cancelTransactionEdit, "click", closeTransactionDialog);
   window.addEventListener("beforeinstallprompt", (event) => {
     event.preventDefault();
     deferredInstallPrompt = event;
-    if (elements.installButton) elements.installButton.hidden = false;
+    if (elements.installItem) elements.installItem.hidden = false;
   });
 }
 
@@ -155,11 +181,12 @@ function bind(element, eventName, handler) {
 
 function populateCategories() {
   const options = state.categories
-    .map((category) => `<option value="${escapeHTML(category.name)}">${escapeHTML(category.name)}</option>`)
+    .map((category) => `<option value="${escapeHTML(category.id)}">${escapeHTML(formatCategoryLabel(category))}</option>`)
     .join("");
   if (elements.categoryInput) elements.categoryInput.innerHTML = options;
   if (elements.editTransactionCategory) elements.editTransactionCategory.innerHTML = options;
   if (elements.todoCategoryInput) elements.todoCategoryInput.innerHTML = options;
+  if (elements.editRecurringCategory) elements.editRecurringCategory.innerHTML = options;
 }
 
 function handleViewClick(event) {
@@ -198,11 +225,13 @@ function viewFromHash() {
 
 function addTransaction(event) {
   event.preventDefault();
+  const selectedCategory = getSelectedCategory(elements.categoryInput);
   const transaction = {
     id: makeId(),
     type: "expense",
     amount: Number(elements.amountInput.value),
-    category: elements.categoryInput.value,
+    category: selectedCategory.name,
+    categoryDescription: selectedCategory.description || "",
     date: elements.dateInput.value,
     note: elements.noteInput.value.trim()
   };
@@ -228,22 +257,24 @@ function deleteTransaction(id) {
 
 function addTodo(event) {
   event.preventDefault();
+  const selectedCategory = getSelectedCategory(elements.todoCategoryInput);
   const todo = {
     id: makeId(),
     title: elements.todoTitleInput.value.trim(),
-    price: Number(elements.todoPriceInput.value),
-    category: elements.todoCategoryInput.value,
+    price: Number(elements.todoPriceInput.value) || 0,
+    category: selectedCategory.name,
+    categoryDescription: selectedCategory.description || "",
     checked: false,
     transactionId: "",
     createdAt: new Date().toISOString()
   };
 
-  if (!todo.title || !todo.price || todo.price <= 0) return;
+  if (!todo.title) return;
 
   state.todos.unshift(todo);
   saveState();
   elements.todoForm.reset();
-  elements.todoCategoryInput.value = state.categories[0]?.name || "Food";
+  elements.todoCategoryInput.value = state.categories[0]?.id || "food";
   render();
 }
 
@@ -251,17 +282,14 @@ function toggleTodo(id, checked) {
   const todo = state.todos.find((item) => item.id === id);
   if (!todo) return;
 
-  todo.checked = checked;
   if (checked) {
-    const linkedTransaction = todo.transactionId
-      ? state.transactions.find((transaction) => transaction.id === todo.transactionId)
-      : null;
-    if (!linkedTransaction) {
-      const transaction = makeTodoTransaction(todo);
-      todo.transactionId = transaction.id;
-      state.transactions.unshift(transaction);
-    }
-  } else if (todo.transactionId) {
+    openTodoPaymentDialog(id);
+    render();
+    return;
+  }
+
+  todo.checked = checked;
+  if (todo.transactionId) {
     state.transactions = state.transactions.filter((transaction) => transaction.id !== todo.transactionId);
     todo.transactionId = "";
   }
@@ -276,7 +304,7 @@ function openTodoDialog(id) {
 
   elements.editTodoId.value = todo.id;
   elements.editTodoTitle.value = todo.title;
-  elements.editTodoPrice.value = todo.price;
+  elements.editTodoPrice.value = todo.price || "";
   elements.todoDialog.showModal();
 }
 
@@ -289,8 +317,8 @@ function saveTodoEdit(event) {
   const todo = state.todos.find((item) => item.id === elements.editTodoId.value);
   if (!todo) return;
   const title = elements.editTodoTitle.value.trim();
-  const price = Number(elements.editTodoPrice.value);
-  if (!title || !price || price <= 0) return;
+  const price = Number(elements.editTodoPrice.value) || 0;
+  if (!title || (todo.checked && price <= 0)) return;
 
   todo.title = title;
   todo.price = price;
@@ -302,6 +330,43 @@ function saveTodoEdit(event) {
 
 function deleteTodoFromDialog() {
   deleteTodo(elements.editTodoId.value);
+}
+
+function openTodoPaymentDialog(id) {
+  const todo = state.todos.find((item) => item.id === id);
+  if (!todo) return;
+  elements.payTodoId.value = todo.id;
+  elements.payTodoAmount.value = todo.price > 0 ? todo.price : "";
+  openModal(elements.todoPaymentDialog);
+  elements.payTodoAmount.focus();
+}
+
+function closeTodoPaymentDialog() {
+  closeModal(elements.todoPaymentDialog);
+}
+
+function saveTodoPayment(event) {
+  event.preventDefault();
+  const todo = state.todos.find((item) => item.id === elements.payTodoId.value);
+  const amount = Number(elements.payTodoAmount.value);
+  if (!todo || !amount || amount <= 0) return;
+
+  todo.price = amount;
+  todo.checked = true;
+  const linkedTransaction = todo.transactionId
+    ? state.transactions.find((transaction) => transaction.id === todo.transactionId)
+    : null;
+  if (linkedTransaction) {
+    syncTodoTransaction(todo);
+  } else {
+    const transaction = makeTodoTransaction(todo);
+    todo.transactionId = transaction.id;
+    state.transactions.unshift(transaction);
+  }
+
+  saveState();
+  render();
+  closeTodoPaymentDialog();
 }
 
 function deleteTodo(id) {
@@ -330,7 +395,7 @@ function openTransactionDialog(id) {
 
   elements.editTransactionId.value = transaction.id;
   elements.editTransactionAmount.value = transaction.amount;
-  elements.editTransactionCategory.value = transaction.category;
+  elements.editTransactionCategory.value = getCategoryOptionValue(transaction.category, transaction.categoryDescription);
   elements.editTransactionDate.value = transaction.date;
   elements.editTransactionNote.value = transaction.note || "";
   elements.transactionDialog.showModal();
@@ -349,7 +414,9 @@ function saveTransactionEdit(event) {
 
   transaction.type = "expense";
   transaction.amount = amount;
-  transaction.category = elements.editTransactionCategory.value;
+  const selectedCategory = getSelectedCategory(elements.editTransactionCategory);
+  transaction.category = selectedCategory.name;
+  transaction.categoryDescription = selectedCategory.description || "";
   transaction.date = elements.editTransactionDate.value;
   transaction.note = elements.editTransactionNote.value.trim();
 
@@ -376,6 +443,7 @@ function render() {
   renderOverall(monthly);
   renderBudgets(monthly);
   renderCategories();
+  renderRecurringExpenses();
 }
 
 function renderOverall(monthly) {
@@ -443,7 +511,7 @@ function renderTransactions() {
   const monthKey = selectedMonthKey();
   const filtered = getTransactionsWithRecurring().filter((transaction) => {
     const matchesType = type === "all" || transaction.type === type;
-    const haystack = `${transaction.category} ${transaction.note}`.toLowerCase();
+    const haystack = `${formatStoredCategory(transaction)} ${transaction.note}`.toLowerCase();
     return monthFromDate(transaction.date) === monthKey && matchesType && haystack.includes(query);
   });
   renderList(elements.transactionList, filtered, { actions: true });
@@ -477,9 +545,9 @@ function renderTodos() {
           <div class="category-icon" style="background:${category.color}">${category.icon}</div>
           <div class="row-title">
             <strong>${escapeHTML(todo.title)}</strong>
-            <span>${escapeHTML(todo.category)}</span>
+            <span>${escapeHTML(formatStoredCategory(todo))}</span>
           </div>
-          <strong class="price-tag">${currency.format(todo.price)}</strong>
+          <strong class="price-tag">${todo.price > 0 ? currency.format(todo.price) : "No estimate"}</strong>
           <button class="secondary" type="button" data-edit-todo="${todo.id}">Edit</button>
         </article>
       `;
@@ -509,8 +577,8 @@ function renderList(container, items, options = { actions: true }) {
         <article class="transaction-row">
           <div class="category-icon" style="background:${category.color}">${category.icon}</div>
           <div class="row-title">
-            <strong>${escapeHTML(transaction.note || transaction.category)}</strong>
-            <span>${escapeHTML(transaction.category)}</span>
+            <strong>${escapeHTML(transaction.note || formatStoredCategory(transaction))}</strong>
+            <span>${escapeHTML(formatStoredCategory(transaction))}</span>
           </div>
           <span class="row-date">${dateFormatter.format(new Date(`${transaction.date}T00:00:00`))}</span>
           <strong class="amount ${transaction.type}">${sign}${currency.format(transaction.amount)}</strong>
@@ -546,9 +614,8 @@ function renderTransactionActions(transaction, showActions) {
 
 function renderBudgets(monthly) {
   const expenseTotals = groupExpenses(monthly);
-  elements.budgetList.innerHTML = state.categories
-    .map((category) => {
-      const categoryName = category.name;
+  elements.budgetList.innerHTML = getBudgetCategories()
+    .map((categoryName) => {
       const budget = state.budgets[categoryName] || 0;
       const spent = expenseTotals[categoryName] || 0;
       const ratio = budget > 0 ? spent / budget : 0;
@@ -588,15 +655,14 @@ function renderCategories() {
 }
 
 function renderCategoryRow(category) {
+  const isSharedBudget = state.categories.some((item) => item.id !== category.id && item.name === category.name);
+  const budgetLabel = isSharedBudget ? `${category.name} shared monthly budget` : "monthly budget";
   return `
     <article class="category-row">
       <div class="category-icon" style="background:${category.color}">${category.icon}</div>
       <div class="row-title">
-        <strong>${escapeHTML(category.name)}</strong>
-        <span>${currency.format(state.budgets[category.name] || 0)} monthly budget</span>
-        <div class="category-tags">
-          <span class="tag ${category.recurring ? "recurring" : ""}">${getRecurringLabel(category)}</span>
-        </div>
+        <strong>${escapeHTML(formatCategoryLabel(category))}</strong>
+        <span>${currency.format(state.budgets[category.name] || 0)} ${escapeHTML(budgetLabel)}</span>
       </div>
       <div class="row-actions">
         <button class="secondary" type="button" data-edit-category="${category.id}">Edit</button>
@@ -606,23 +672,57 @@ function renderCategoryRow(category) {
   `;
 }
 
+function renderRecurringExpenses() {
+  if (!elements.recurringList) return;
+  const recurringExpenses = state.recurringExpenses || [];
+  if (!recurringExpenses.length) {
+    elements.recurringList.innerHTML = `
+      <div class="empty-state">
+        <strong>No recurring expenses</strong>
+        <span>Add bills or repeat payments here, separate from categories.</span>
+      </div>
+    `;
+    return;
+  }
+
+  elements.recurringList.innerHTML = recurringExpenses
+    .map((expense) => {
+      const category = getCategory(expense.category);
+      return `
+        <article class="category-row">
+          <div class="category-icon" style="background:${category.color}">${category.icon}</div>
+          <div class="row-title">
+            <strong>${escapeHTML(expense.name)}</strong>
+            <span>${escapeHTML(formatStoredCategory(expense))}</span>
+            <div class="category-tags">
+              <span class="tag recurring">${escapeHTML(getRecurringLabel(expense))}</span>
+            </div>
+          </div>
+          <div class="row-actions">
+            <button class="secondary" type="button" data-edit-recurring="${expense.id}">Edit</button>
+            <button class="delete-button" type="button" data-delete-recurring-expense="${expense.id}" title="Delete recurring expense" aria-label="Delete recurring expense">x</button>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+
+  elements.recurringList.querySelectorAll("[data-edit-recurring]").forEach((button) => {
+    button.addEventListener("click", () => openRecurringDialog(button.dataset.editRecurring));
+  });
+  elements.recurringList.querySelectorAll("[data-delete-recurring-expense]").forEach((button) => {
+    button.addEventListener("click", () => deleteRecurringExpense(button.dataset.deleteRecurringExpense));
+  });
+}
+
 function openAddCategoryDialog() {
   elements.categoryDialogTitle.textContent = "Add category";
   elements.categoryDialogMode.value = "add";
   elements.editCategoryId.value = "";
   elements.editCategoryName.value = "";
+  elements.editCategoryDescription.value = "";
   elements.editCategoryBudget.value = 0;
   elements.editCategoryColor.value = getRandomCategoryColor();
-  elements.editCategoryRecurring.checked = false;
-  elements.editCategoryRecurringAmount.value = 0;
-  elements.editCategoryRecurringStart.value = todayISO();
-  elements.editCategoryHasEnd.checked = false;
-  elements.editCategoryRecurringEnd.value = "";
-  elements.editCategoryRecurringPattern.value = "monthly";
-  elements.editCategoryHasAmountChange.checked = false;
-  elements.editCategoryNextAmount.value = "";
-  elements.editCategoryAmountChangeDate.value = "";
-  syncDialogRecurringControls();
   elements.categoryDialog.showModal();
 }
 
@@ -634,18 +734,9 @@ function openCategoryDialog(id) {
   elements.categoryDialogMode.value = "edit";
   elements.editCategoryId.value = category.id;
   elements.editCategoryName.value = category.name;
+  elements.editCategoryDescription.value = category.description || "";
   elements.editCategoryBudget.value = state.budgets[category.name] || 0;
   elements.editCategoryColor.value = category.color;
-  elements.editCategoryRecurring.checked = category.recurring;
-  elements.editCategoryRecurringAmount.value = category.recurringAmount || state.budgets[category.name] || 0;
-  elements.editCategoryRecurringStart.value = category.recurringStart || todayISO();
-  elements.editCategoryHasEnd.checked = Boolean(category.recurringEnd);
-  elements.editCategoryRecurringEnd.value = category.recurringEnd || "";
-  elements.editCategoryRecurringPattern.value = category.recurringPattern || "monthly";
-  elements.editCategoryHasAmountChange.checked = Boolean(category.recurringAmountChangeDate && category.recurringNextAmount);
-  elements.editCategoryNextAmount.value = category.recurringNextAmount || "";
-  elements.editCategoryAmountChangeDate.value = category.recurringAmountChangeDate || "";
-  syncDialogRecurringControls();
   elements.categoryDialog.showModal();
 }
 
@@ -663,42 +754,39 @@ function saveCategoryEdit(event) {
   const category = state.categories.find((item) => item.id === id);
   if (!category) return;
   const previousName = category.name;
+  const previousDescription = category.description || "";
 
   const nextName = normalizeCategoryName(elements.editCategoryName.value);
+  const nextDescription = normalizeCategoryDescription(elements.editCategoryDescription.value);
   if (!nextName) return;
-  const duplicate = state.categories.some((item) => item.name.toLowerCase() === nextName.toLowerCase() && item.id !== id);
+  const duplicate = state.categories.some((item) => isSameCategoryLabel(item, nextName, nextDescription) && item.id !== id);
   if (duplicate) return;
 
-  const isRecurring = elements.editCategoryRecurring.checked;
-  const hasEnd = elements.editCategoryHasEnd.checked;
-  const recurringStart = normalizeRecurringStart({
-    recurringStart: elements.editCategoryRecurringStart.value
-  });
-  const recurringEnd = hasEnd ? normalizeRecurringEnd(elements.editCategoryRecurringEnd.value, recurringStart) : "";
   const budget = Number(elements.editCategoryBudget.value) || 0;
-  const recurringAmount = Number(elements.editCategoryRecurringAmount.value) || budget;
-  const hasAmountChange = elements.editCategoryHasAmountChange.checked;
-  const amountChangeDate = hasAmountChange ? normalizeAmountChangeDate(elements.editCategoryAmountChangeDate.value, recurringStart, recurringEnd) : "";
-  const nextAmount = hasAmountChange && amountChangeDate ? Number(elements.editCategoryNextAmount.value) || recurringAmount : 0;
 
   category.name = nextName;
+  category.description = nextDescription;
   category.color = elements.editCategoryColor.value;
   category.icon = makeCategoryIcon(nextName);
-  category.recurring = isRecurring;
-  category.recurringAmount = isRecurring ? recurringAmount : 0;
-  category.recurringStart = isRecurring ? recurringStart : todayISO();
-  category.recurringEnd = isRecurring ? recurringEnd : "";
-  category.recurringPattern = elements.editCategoryRecurringPattern.value;
-  category.recurringAmountChangeDate = isRecurring ? amountChangeDate : "";
-  category.recurringNextAmount = isRecurring ? nextAmount : 0;
 
-  delete state.budgets[previousName];
+  if (previousName !== nextName && !state.categories.some((item) => item.id !== id && item.name === previousName)) {
+    delete state.budgets[previousName];
+  }
   state.budgets[nextName] = budget;
   state.transactions = state.transactions.map((transaction) => (
-    transaction.category === previousName ? { ...transaction, category: nextName } : transaction
+    transaction.category === previousName && (transaction.categoryDescription || "") === previousDescription
+      ? { ...transaction, category: nextName, categoryDescription: nextDescription }
+      : transaction
   ));
   state.todos = state.todos.map((todo) => (
-    todo.category === previousName ? { ...todo, category: nextName } : todo
+    todo.category === previousName && (todo.categoryDescription || "") === previousDescription
+      ? { ...todo, category: nextName, categoryDescription: nextDescription }
+      : todo
+  ));
+  state.recurringExpenses = (state.recurringExpenses || []).map((expense) => (
+    expense.category === previousName && (expense.categoryDescription || "") === previousDescription
+      ? { ...expense, category: nextName, categoryDescription: nextDescription }
+      : expense
   ));
 
   saveState();
@@ -709,32 +797,20 @@ function saveCategoryEdit(event) {
 
 function addCategoryFromDialog() {
   const name = normalizeCategoryName(elements.editCategoryName.value);
-  if (!name || state.categories.some((category) => category.name.toLowerCase() === name.toLowerCase())) return;
-  const isRecurring = elements.editCategoryRecurring.checked;
-  const hasEnd = elements.editCategoryHasEnd.checked;
-  const recurringStart = normalizeRecurringStart({ recurringStart: elements.editCategoryRecurringStart.value });
-  const recurringEnd = hasEnd ? normalizeRecurringEnd(elements.editCategoryRecurringEnd.value, recurringStart) : "";
+  const description = normalizeCategoryDescription(elements.editCategoryDescription.value);
+  if (!name || state.categories.some((category) => isSameCategoryLabel(category, name, description))) return;
+  const hasExistingBudget = Object.prototype.hasOwnProperty.call(state.budgets, name);
   const budget = Number(elements.editCategoryBudget.value) || 0;
-  const recurringAmount = Number(elements.editCategoryRecurringAmount.value) || budget;
-  const hasAmountChange = elements.editCategoryHasAmountChange.checked;
-  const amountChangeDate = hasAmountChange ? normalizeAmountChangeDate(elements.editCategoryAmountChangeDate.value, recurringStart, recurringEnd) : "";
-  const nextAmount = hasAmountChange && amountChangeDate ? Number(elements.editCategoryNextAmount.value) || recurringAmount : 0;
 
   state.categories.push({
     id: makeId(),
     name,
+    description,
     color: elements.editCategoryColor.value || getRandomCategoryColor(),
     icon: makeCategoryIcon(name),
-    recurring: isRecurring,
-    recurringAmount: isRecurring ? recurringAmount : 0,
-    recurringStart: isRecurring ? recurringStart : todayISO(),
-    recurringEnd: isRecurring ? recurringEnd : "",
-    recurringPattern: elements.editCategoryRecurringPattern.value,
-    recurringAmountChangeDate: isRecurring ? amountChangeDate : "",
-    recurringNextAmount: isRecurring ? nextAmount : 0,
     protected: false
   });
-  state.budgets[name] = budget;
+  state.budgets[name] = hasExistingBudget && budget === 0 ? state.budgets[name] : budget;
   saveState();
   populateCategories();
   render();
@@ -744,41 +820,153 @@ function addCategoryFromDialog() {
 function deleteCategory(id) {
   const categoryToDelete = state.categories.find((category) => category.id === id);
   if (!categoryToDelete || categoryToDelete.protected) return;
-  if (!confirm(`Delete ${categoryToDelete.name}? Transactions in this category will move to Food.`)) return;
+  const label = formatCategoryLabel(categoryToDelete);
+  if (!confirm(`Delete ${label}? Transactions in this category will move to Food.`)) return;
   const name = categoryToDelete.name;
-  state.categories = state.categories.filter((category) => category.id !== id || category.protected);
-  state.transactions = state.transactions.map((transaction) => (
-    transaction.category === name ? { ...transaction, category: "Food" } : transaction
-  ));
-  state.todos = state.todos.map((todo) => (
-    todo.category === name ? { ...todo, category: "Food" } : todo
-  ));
-  delete state.budgets[name];
+  const description = categoryToDelete.description || "";
+  state.categories = state.categories.filter((category) => (category.id !== id && !isSameCategoryLabel(category, name, description)) || category.protected);
+  const categoryNameStillExists = state.categories.some((category) => category.name === name);
+  if (!categoryNameStillExists) {
+    state.transactions = state.transactions.map((transaction) => (
+      transaction.category === name ? { ...transaction, category: "Food", categoryDescription: "" } : transaction
+    ));
+    state.todos = state.todos.map((todo) => (
+      todo.category === name ? { ...todo, category: "Food", categoryDescription: "" } : todo
+    ));
+    state.recurringExpenses = (state.recurringExpenses || []).map((expense) => (
+      expense.category === name ? { ...expense, category: "Food", categoryDescription: "" } : expense
+    ));
+    delete state.budgets[name];
+  } else {
+    state.recurringExpenses = (state.recurringExpenses || []).filter((expense) => (
+      !(expense.category === name && (expense.categoryDescription || "") === description)
+    ));
+    state.transactions = state.transactions.map((transaction) => (
+      transaction.category === name && (transaction.categoryDescription || "") === description
+        ? { ...transaction, categoryDescription: "" }
+        : transaction
+    ));
+    state.todos = state.todos.map((todo) => (
+      todo.category === name && (todo.categoryDescription || "") === description
+        ? { ...todo, categoryDescription: "" }
+        : todo
+    ));
+  }
   saveState();
   populateCategories();
   render();
 }
 
-function syncDialogRecurringControls() {
-  const disabled = !elements.editCategoryRecurring.checked;
-  if (!elements.editCategoryRecurringStart.value) {
-    elements.editCategoryRecurringStart.value = todayISO();
+function openAddRecurringDialog() {
+  elements.recurringDialogTitle.textContent = "Add recurring expense";
+  elements.recurringDialogMode.value = "add";
+  elements.editRecurringId.value = "";
+  elements.editRecurringName.value = "";
+  elements.editRecurringCategory.value = state.categories[0]?.id || "food";
+  elements.editRecurringAmount.value = "";
+  elements.editRecurringStart.value = todayISO();
+  elements.editRecurringHasEnd.checked = false;
+  elements.editRecurringEnd.value = "";
+  elements.editRecurringPattern.value = "monthly";
+  elements.editRecurringHasAmountChange.checked = false;
+  elements.editRecurringNextAmount.value = "";
+  elements.editRecurringAmountChangeDate.value = "";
+  elements.deleteRecurringFromDialog.hidden = true;
+  syncRecurringDialogControls();
+  elements.recurringDialog.showModal();
+}
+
+function openRecurringDialog(id) {
+  const expense = (state.recurringExpenses || []).find((item) => item.id === id);
+  if (!expense) return;
+
+  elements.recurringDialogTitle.textContent = "Edit recurring expense";
+  elements.recurringDialogMode.value = "edit";
+  elements.editRecurringId.value = expense.id;
+  elements.editRecurringName.value = expense.name;
+  elements.editRecurringCategory.value = getCategoryOptionValue(expense.category, expense.categoryDescription);
+  elements.editRecurringAmount.value = expense.amount;
+  elements.editRecurringStart.value = expense.recurringStart || todayISO();
+  elements.editRecurringHasEnd.checked = Boolean(expense.recurringEnd);
+  elements.editRecurringEnd.value = expense.recurringEnd || "";
+  elements.editRecurringPattern.value = expense.recurringPattern || "monthly";
+  elements.editRecurringHasAmountChange.checked = Boolean(expense.recurringAmountChangeDate && expense.recurringNextAmount);
+  elements.editRecurringNextAmount.value = expense.recurringNextAmount || "";
+  elements.editRecurringAmountChangeDate.value = expense.recurringAmountChangeDate || "";
+  elements.deleteRecurringFromDialog.hidden = false;
+  syncRecurringDialogControls();
+  elements.recurringDialog.showModal();
+}
+
+function closeRecurringDialog() {
+  elements.recurringDialog.close();
+}
+
+function saveRecurringEdit(event) {
+  event.preventDefault();
+  const selectedCategory = getSelectedCategory(elements.editRecurringCategory);
+  const recurringExpense = readRecurringDialog(selectedCategory);
+  if (!recurringExpense) return;
+
+  if (elements.recurringDialogMode.value === "add") {
+    state.recurringExpenses = [...(state.recurringExpenses || []), { id: makeId(), ...recurringExpense }];
+  } else {
+    const id = elements.editRecurringId.value;
+    state.recurringExpenses = (state.recurringExpenses || []).map((expense) => (
+      expense.id === id ? { ...expense, ...recurringExpense } : expense
+    ));
   }
-  if (!elements.editCategoryRecurringAmount.value || Number(elements.editCategoryRecurringAmount.value) <= 0) {
-    elements.editCategoryRecurringAmount.value = elements.editCategoryBudget.value || 0;
+
+  saveState();
+  render();
+  closeRecurringDialog();
+}
+
+function readRecurringDialog(selectedCategory) {
+  const name = elements.editRecurringName.value.trim().replace(/\s+/g, " ").slice(0, 80);
+  const amount = Number(elements.editRecurringAmount.value);
+  if (!name || !amount || amount <= 0) return null;
+  const recurringStart = normalizeRecurringStart({ recurringStart: elements.editRecurringStart.value });
+  const recurringEnd = elements.editRecurringHasEnd.checked ? normalizeRecurringEnd(elements.editRecurringEnd.value, recurringStart) : "";
+  const amountChangeDate = elements.editRecurringHasAmountChange.checked
+    ? normalizeAmountChangeDate(elements.editRecurringAmountChangeDate.value, recurringStart, recurringEnd)
+    : "";
+  const nextAmount = amountChangeDate ? Number(elements.editRecurringNextAmount.value) || amount : 0;
+
+  return {
+    name,
+    amount,
+    category: selectedCategory.name,
+    categoryDescription: selectedCategory.description || "",
+    recurringStart,
+    recurringEnd,
+    recurringPattern: elements.editRecurringPattern.value,
+    recurringAmountChangeDate: amountChangeDate,
+    recurringNextAmount: nextAmount
+  };
+}
+
+function deleteRecurringFromDialog() {
+  deleteRecurringExpense(elements.editRecurringId.value);
+}
+
+function deleteRecurringExpense(id) {
+  if (!id) return;
+  if (!confirm("Delete this recurring expense?")) return;
+  state.recurringExpenses = (state.recurringExpenses || []).filter((expense) => expense.id !== id);
+  state.recurringSkips = (state.recurringSkips || []).filter((key) => !key.startsWith(`recurring-${id}-`));
+  saveState();
+  render();
+  if (elements.recurringDialog.open) closeRecurringDialog();
+}
+
+function syncRecurringDialogControls() {
+  if (!elements.editRecurringStart.value) {
+    elements.editRecurringStart.value = todayISO();
   }
-  elements.editCategoryRecurringAmount.disabled = disabled;
-  elements.editCategoryRecurringStart.disabled = disabled;
-  elements.editCategoryHasEnd.disabled = disabled;
-  if (disabled) {
-    elements.editCategoryHasEnd.checked = false;
-    elements.editCategoryHasAmountChange.checked = false;
-  }
-  elements.editCategoryRecurringEnd.disabled = disabled || !elements.editCategoryHasEnd.checked;
-  elements.editCategoryRecurringPattern.disabled = disabled;
-  elements.editCategoryHasAmountChange.disabled = disabled;
-  elements.editCategoryNextAmount.disabled = disabled || !elements.editCategoryHasAmountChange.checked;
-  elements.editCategoryAmountChangeDate.disabled = disabled || !elements.editCategoryHasAmountChange.checked;
+  elements.editRecurringEnd.disabled = !elements.editRecurringHasEnd.checked;
+  elements.editRecurringNextAmount.disabled = !elements.editRecurringHasAmountChange.checked;
+  elements.editRecurringAmountChangeDate.disabled = !elements.editRecurringHasAmountChange.checked;
 }
 
 function renderChart(monthly) {
@@ -903,7 +1091,7 @@ async function installApp() {
   deferredInstallPrompt.prompt();
   await deferredInstallPrompt.userChoice;
   deferredInstallPrompt = null;
-  if (elements.installButton) elements.installButton.hidden = true;
+  if (elements.installItem) elements.installItem.hidden = true;
 }
 
 function registerServiceWorker() {
@@ -935,6 +1123,12 @@ function totalBudget() {
   return Object.values(state.budgets || {}).reduce((acc, value) => acc + Number(value || 0), 0);
 }
 
+function getBudgetCategories() {
+  return state.categories
+    .map((category) => category.name)
+    .filter((name, index, list) => list.indexOf(name) === index);
+}
+
 function sum(items) {
   return items.reduce((acc, transaction) => acc + transaction.amount, 0);
 }
@@ -942,9 +1136,27 @@ function sum(items) {
 function getCategory(name) {
   return state.categories.find((category) => category.name === name) || {
     name,
+    description: "",
     color: "#475569",
     icon: makeCategoryIcon(name)
   };
+}
+
+function getSelectedCategory(select) {
+  return state.categories.find((category) => category.id === select.value) || state.categories[0] || getCategory("Food");
+}
+
+function getCategoryOptionValue(name, description = "") {
+  return (
+    state.categories.find((category) => category.name === name && (category.description || "") === (description || "")) ||
+    state.categories.find((category) => category.name === name) ||
+    state.categories[0] ||
+    { id: "food" }
+  ).id;
+}
+
+function formatStoredCategory(item) {
+  return item.categoryDescription ? `${item.category} - ${item.categoryDescription}` : item.category;
 }
 
 function getTransactionsWithRecurring() {
@@ -957,6 +1169,7 @@ function makeTodoTransaction(todo) {
     type: "expense",
     amount: todo.price,
     category: todo.category,
+    categoryDescription: todo.categoryDescription || "",
     date: todayISO(),
     note: todo.title,
     todoId: todo.id
@@ -974,31 +1187,33 @@ function syncTodoTransaction(todo) {
   transaction.amount = todo.price;
   transaction.note = todo.title;
   transaction.category = todo.category;
+  transaction.categoryDescription = todo.categoryDescription || "";
 }
 
 function getRecurringTransactions() {
   const monthKeys = new Set([selectedMonthKey(), currentMonthKey(), ...state.transactions.map((transaction) => monthFromDate(transaction.date))]);
   return [...monthKeys].flatMap((monthKey) => {
-    return state.categories
-      .filter((category) => category.recurring && hasRecurringAmount(category))
-      .flatMap((category) => {
-        return getRecurringDatesForMonth(category, monthKey).filter((date) => !isRecurringSkipped(category.id, date)).map((date) => ({
-          id: getRecurringKey(category.id, date),
-          recurringKey: getRecurringKey(category.id, date),
+    return (state.recurringExpenses || [])
+      .filter((expense) => hasRecurringAmount(expense))
+      .flatMap((expense) => {
+        return getRecurringDatesForMonth(expense, monthKey).filter((date) => !isRecurringSkipped(expense.id, date)).map((date) => ({
+          id: getRecurringKey(expense.id, date),
+          recurringKey: getRecurringKey(expense.id, date),
           type: "expense",
-          amount: getRecurringAmountForDate(category, date),
-          category: category.name,
+          amount: getRecurringAmountForDate(expense, date),
+          category: expense.category,
+          categoryDescription: expense.categoryDescription || "",
           date,
-          note: "Recurring payment",
+          note: expense.name,
           recurring: true
         }));
       });
   });
 }
 
-function getRecurringDatesForMonth(category, monthKey) {
-  const start = parseISODate(category.recurringStart || todayISO());
-  const end = category.recurringEnd ? parseISODate(category.recurringEnd) : null;
+function getRecurringDatesForMonth(expense, monthKey) {
+  const start = parseISODate(expense.recurringStart || todayISO());
+  const end = expense.recurringEnd ? parseISODate(expense.recurringEnd) : null;
   const today = parseISODate(todayISO());
   const monthStart = parseISODate(`${monthKey}-01`);
   const [year, month] = monthKey.split("-").map(Number);
@@ -1008,7 +1223,7 @@ function getRecurringDatesForMonth(category, monthKey) {
   if (monthStart > today) return [];
   const recurrenceEnd = [end, monthEnd, today].filter(Boolean).sort((a, b) => a - b)[0];
 
-  if (category.recurringPattern === "daily") {
+  if (expense.recurringPattern === "daily") {
     const first = start > monthStart ? start : monthStart;
     const dates = [];
     for (let cursor = new Date(first); cursor <= recurrenceEnd; cursor.setDate(cursor.getDate() + 1)) {
@@ -1017,7 +1232,7 @@ function getRecurringDatesForMonth(category, monthKey) {
     return dates;
   }
 
-  if (category.recurringPattern === "weekly") {
+  if (expense.recurringPattern === "weekly") {
     const dates = [];
     const cursor = new Date(start);
     while (cursor < monthStart) {
@@ -1030,7 +1245,7 @@ function getRecurringDatesForMonth(category, monthKey) {
     return dates;
   }
 
-  if (category.recurringPattern === "yearly") {
+  if (expense.recurringPattern === "yearly") {
     if (start.getMonth() !== monthStart.getMonth()) return [];
     const day = Math.min(start.getDate(), monthEnd.getDate());
     const yearlyDate = new Date(year, month - 1, day);
@@ -1044,20 +1259,20 @@ function getRecurringDatesForMonth(category, monthKey) {
   return monthlyDate <= recurrenceEnd ? [toISODate(monthlyDate)] : [];
 }
 
-function getRecurringAmountForDate(category, date) {
-  const baseAmount = Number(category.recurringAmount || state.budgets[category.name] || 0);
+function getRecurringAmountForDate(expense, date) {
+  const baseAmount = Number(expense.amount || 0);
   if (
-    category.recurringAmountChangeDate &&
-    category.recurringNextAmount &&
-    parseISODate(date) >= parseISODate(category.recurringAmountChangeDate)
+    expense.recurringAmountChangeDate &&
+    expense.recurringNextAmount &&
+    parseISODate(date) >= parseISODate(expense.recurringAmountChangeDate)
   ) {
-    return Number(category.recurringNextAmount);
+    return Number(expense.recurringNextAmount);
   }
   return baseAmount;
 }
 
-function hasRecurringAmount(category) {
-  return Number(category.recurringAmount || state.budgets[category.name] || 0) > 0 || Number(category.recurringNextAmount || 0) > 0;
+function hasRecurringAmount(expense) {
+  return Number(expense.amount || 0) > 0 || Number(expense.recurringNextAmount || 0) > 0;
 }
 
 function getRecurringKey(categoryId, date) {
@@ -1117,25 +1332,19 @@ function makeId() {
 
 function normalizeState(incoming) {
   const customCategories = Array.isArray(incoming.categories)
-    ? incoming.categories.filter((category) => category.name && category.name !== "Food")
+    ? incoming.categories.filter((category) => category.name && (category.name !== "Food" || category.description))
     : [];
   const categories = [
     ...defaultCategories.map((category) => ({ ...category })),
     ...customCategories.map((category) => ({
       id: category.id || makeId(),
       name: normalizeCategoryName(category.name),
+      description: normalizeCategoryDescription(category.description || ""),
       color: category.color || "#0f766e",
       icon: category.icon || makeCategoryIcon(category.name),
-      recurring: Boolean(category.recurring),
-      recurringAmount: Number(category.recurringAmount ?? incoming.budgets?.[category.name] ?? defaultBudgets[category.name] ?? 0),
-      recurringStart: normalizeRecurringStart(category),
-      recurringEnd: normalizeRecurringEnd(category.recurringEnd, normalizeRecurringStart(category)),
-      recurringPattern: normalizeRecurringPattern(category.recurringPattern),
-      recurringAmountChangeDate: normalizeAmountChangeDate(category.recurringAmountChangeDate, normalizeRecurringStart(category), normalizeRecurringEnd(category.recurringEnd, normalizeRecurringStart(category))),
-      recurringNextAmount: Number(category.recurringNextAmount || 0),
       protected: false
     }))
-  ].filter((category, index, list) => category.name && list.findIndex((item) => item.name.toLowerCase() === category.name.toLowerCase()) === index);
+  ].filter((category, index, list) => category.name && list.findIndex((item) => categoryKey(item) === categoryKey(category)) === index);
 
   const budgets = {};
   categories.forEach((category) => {
@@ -1146,39 +1355,115 @@ function normalizeState(incoming) {
   const transactions = Array.isArray(incoming.transactions)
     ? incoming.transactions.map((transaction) => ({
       ...transaction,
-      category: categoryNames.has(transaction.category) ? transaction.category : "Food"
+      category: categoryNames.has(transaction.category) ? transaction.category : "Food",
+      categoryDescription: getValidCategoryDescription(transaction.category, transaction.categoryDescription, categories)
     }))
     : [];
   const transactionIds = new Set(transactions.map((transaction) => transaction.id));
   const todos = Array.isArray(incoming.todos)
     ? incoming.todos
-      .filter((todo) => todo.title && Number(todo.price) > 0)
+      .filter((todo) => todo.title)
       .map((todo) => {
         const transactionId = transactionIds.has(todo.transactionId) ? todo.transactionId : "";
+        const price = Number(todo.price) || 0;
         return {
           id: todo.id || makeId(),
           title: String(todo.title).trim().slice(0, 80),
-          price: Number(todo.price),
+          price,
           category: categoryNames.has(todo.category) ? todo.category : "Food",
-          checked: Boolean(todo.checked && transactionId),
+          categoryDescription: getValidCategoryDescription(todo.category, todo.categoryDescription, categories),
+          checked: Boolean(todo.checked && transactionId && price > 0),
           transactionId,
           createdAt: todo.createdAt || new Date().toISOString()
         };
       })
     : [];
+  const recurringExpenses = normalizeRecurringExpenses(incoming, categories, categoryNames);
 
   return {
     transactions,
     todos,
     budgets,
     categories,
+    recurringExpenses,
     wallet: Number(incoming.wallet || 0),
     recurringSkips: Array.isArray(incoming.recurringSkips) ? incoming.recurringSkips : []
   };
 }
 
+function normalizeRecurringExpenses(incoming, categories, categoryNames) {
+  const fromExpenses = Array.isArray(incoming.recurringExpenses)
+    ? incoming.recurringExpenses.map((expense) => normalizeRecurringExpense(expense, categories, categoryNames))
+    : [];
+  const fromLegacyCategories = Array.isArray(incoming.categories)
+    ? incoming.categories
+      .filter((category) => category.recurring)
+      .map((category) => normalizeRecurringExpense({
+        id: category.id || makeId(),
+        name: `${formatCategoryLabel({
+          name: normalizeCategoryName(category.name),
+          description: normalizeCategoryDescription(category.description || "")
+        })} recurring payment`,
+        amount: Number(category.recurringAmount ?? incoming.budgets?.[category.name] ?? defaultBudgets[category.name] ?? 0),
+        category: category.name,
+        categoryDescription: category.description || "",
+        recurringStart: category.recurringStart,
+        recurringEnd: category.recurringEnd,
+        recurringPattern: category.recurringPattern,
+        recurringAmountChangeDate: category.recurringAmountChangeDate,
+        recurringNextAmount: category.recurringNextAmount
+      }, categories, categoryNames))
+    : [];
+
+  return [...fromExpenses, ...fromLegacyCategories]
+    .filter((expense) => expense.name && hasRecurringAmount(expense))
+    .filter((expense, index, list) => list.findIndex((item) => item.id === expense.id) === index);
+}
+
+function normalizeRecurringExpense(expense, categories, categoryNames) {
+  const category = categoryNames.has(expense.category) ? expense.category : "Food";
+  const description = getValidCategoryDescription(category, expense.categoryDescription, categories);
+  const start = normalizeRecurringStart(expense);
+  const end = normalizeRecurringEnd(expense.recurringEnd, start);
+  return {
+    id: expense.id || makeId(),
+    name: String(expense.name || "Recurring payment").trim().replace(/\s+/g, " ").slice(0, 80),
+    amount: Number(expense.amount || 0),
+    category,
+    categoryDescription: description,
+    recurringStart: start,
+    recurringEnd: end,
+    recurringPattern: normalizeRecurringPattern(expense.recurringPattern),
+    recurringAmountChangeDate: normalizeAmountChangeDate(expense.recurringAmountChangeDate, start, end),
+    recurringNextAmount: Number(expense.recurringNextAmount || 0)
+  };
+}
+
 function normalizeCategoryName(value) {
   return value.trim().replace(/\s+/g, " ").slice(0, 32);
+}
+
+function normalizeCategoryDescription(value) {
+  return String(value || "").trim().replace(/\s+/g, " ").slice(0, 48);
+}
+
+function formatCategoryLabel(category) {
+  return category.description ? `${category.name} - ${category.description}` : category.name;
+}
+
+function categoryKey(category) {
+  return `${category.name.toLowerCase()}|${(category.description || "").toLowerCase()}`;
+}
+
+function isSameCategoryLabel(category, name, description) {
+  return categoryKey(category) === categoryKey({ name, description });
+}
+
+function getValidCategoryDescription(name, description, categories) {
+  const normalizedDescription = normalizeCategoryDescription(description || "");
+  return categories.some((category) => category.name === name && (category.description || "") === normalizedDescription)
+    ? normalizedDescription
+    : "";
 }
 
 function makeCategoryIcon(name) {
@@ -1218,14 +1503,13 @@ function normalizeRecurringPattern(pattern) {
   return ["daily", "weekly", "monthly", "yearly"].includes(pattern) ? pattern : "monthly";
 }
 
-function getRecurringLabel(category) {
-  if (!category.recurring) return "Not recurring";
-  const pattern = category.recurringPattern.charAt(0).toUpperCase() + category.recurringPattern.slice(1);
-  const start = dateFormatter.format(parseISODate(category.recurringStart));
-  const end = category.recurringEnd ? ` until ${dateFormatter.format(parseISODate(category.recurringEnd))}` : "";
-  const amount = currency.format(getRecurringAmountForDate(category, category.recurringStart));
-  const change = category.recurringAmountChangeDate && category.recurringNextAmount
-    ? `, ${currency.format(category.recurringNextAmount)} from ${dateFormatter.format(parseISODate(category.recurringAmountChangeDate))}`
+function getRecurringLabel(expense) {
+  const pattern = (expense.recurringPattern || "monthly").charAt(0).toUpperCase() + (expense.recurringPattern || "monthly").slice(1);
+  const start = dateFormatter.format(parseISODate(expense.recurringStart));
+  const end = expense.recurringEnd ? ` until ${dateFormatter.format(parseISODate(expense.recurringEnd))}` : "";
+  const amount = currency.format(getRecurringAmountForDate(expense, expense.recurringStart));
+  const change = expense.recurringAmountChangeDate && expense.recurringNextAmount
+    ? `, ${currency.format(expense.recurringNextAmount)} from ${dateFormatter.format(parseISODate(expense.recurringAmountChangeDate))}`
     : "";
   return `${pattern} ${amount} from ${start}${end}${change}`;
 }
